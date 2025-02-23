@@ -5,6 +5,12 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
+      <Compile Include="domain\Culture.fs" />
       <Compile Include="domain\Item.fs" />
+      <Compile Include="data_access\Culture.fs" />
+      <Compile Include="Translator.fs" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\fsharp-infrastructure\src\fsharp-infrastructure.fsproj" />
     </ItemGroup>
 </Project>
