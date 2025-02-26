@@ -6,7 +6,7 @@
     </PropertyGroup>
     <ItemGroup>
       <Compile Include="domain\Culture.fs" />
-      <Compile Include="domain\Item.fs" />
+      <Compile Include="domain\Translation.fs" />
       <Compile Include="data_access\Culture.fs" />
       <Compile Include="Translator.fs" />
     </ItemGroup>
