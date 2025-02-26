@@ -1,10 +1,13 @@
-[<RequireQualifiedAccess>]
+[<AutoOpen>]
 module Multilang.Domain.Translation
 
 type Item =
     { Id: string
       Value: string }
     
-type Input =
+type Request =
     { Culture: Culture
       Items: Item list }
+
+type Response =
+    { Items: Item list }
