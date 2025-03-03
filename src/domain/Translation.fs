@@ -7,7 +7,7 @@ type Item =
     
 type Request =
     { Culture: Culture
-      Items: Item list }
+      Items: Item seq }
 
 type Response =
     { Items: Item list }
