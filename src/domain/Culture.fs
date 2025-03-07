@@ -10,9 +10,14 @@ type Culture =
         | "RU" -> Russian
         | _ -> English
 
-    member this.Value =
+    member this.Code =
         match this with
         | English -> "EN"
         | Russian -> "RU"
+    
+    member this.Name =
+        match this with
+        | English -> "English"
+        | Russian -> "Russian"
 
     static member createDefault() = English
