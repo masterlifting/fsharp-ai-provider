@@ -7,6 +7,7 @@
     <ItemGroup>
       <Compile Include="domain\Culture.fs" />
       <Compile Include="domain\Translation.fs" />
+      <Compile Include="clients\open_ai\Domain.fs" />
       <Compile Include="data_access\Culture.fs" />
       <Compile Include="Translator.fs" />
     </ItemGroup>
