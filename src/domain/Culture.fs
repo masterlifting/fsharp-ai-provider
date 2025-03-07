@@ -7,9 +7,9 @@ type Culture =
 
     static member create value =
         match value with
-        | "RU" ->Russian
+        | "RU" -> Russian
         | _ -> English
-        
+
     member this.Value =
         match this with
         | English -> "EN"
