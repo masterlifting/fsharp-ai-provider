@@ -1,5 +1,5 @@
-﻿[<AutoOpen>]
-module Multilang.OpenAI.Domain
+[<AutoOpen>]
+module AIProvider.OpenAI.Domain
 
 open System
 open System.Collections.Concurrent

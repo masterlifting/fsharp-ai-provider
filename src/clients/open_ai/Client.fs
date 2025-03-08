@@ -1,6 +1,6 @@
-﻿module Multilang.OpenAI.Client
+module AIProvider.OpenAI.Client
 
-open Multilang.OpenAI.Domain
+open AIProvider.OpenAI.Domain
 
 let private clients = ClientFactory()
 

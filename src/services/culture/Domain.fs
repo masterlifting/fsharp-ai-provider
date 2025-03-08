@@ -1,5 +1,5 @@
 [<AutoOpen>]
-module Multilang.Domain.Translation
+module AIProvider.Services.Culture.Domain
 
 open Infrastructure.Domain
 open Infrastructure.Prelude

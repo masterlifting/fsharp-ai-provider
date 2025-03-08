@@ -1,5 +1,5 @@
-﻿[<RequireQualifiedAccess>]
-module Multilang.OpenAI.Request
+[<RequireQualifiedAccess>]
+module AIProvider.OpenAI.Request
 
 open Infrastructure.Domain
 
