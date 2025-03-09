@@ -1,8 +1,10 @@
 [<AutoOpen>]
 module AIProvider.Services.Culture.Domain
 
+open AIProvider
 open Infrastructure.Domain
 open Infrastructure.SerDe
+open AIProvider.OpenAI.Domain
 
 type RequestItem = { Id: string; Value: string }
 
@@ -10,7 +12,7 @@ type Request =
     { Culture: Culture
       Items: RequestItem seq }
 
-    member internal this.toPrompt() =
+    member internal this.toOpenAIRequest() =
         this.Items
         |> Json.serialize
         |> Result.map (fun data ->
@@ -27,10 +29,15 @@ type Request =
                 + "}\n"
                 + "```"
 
-            $"{agenda}\n{data}\n{prompt}")
-
+            { Model = Gpt4o
+              Store = false
+              Content =
+                { System = agenda
+                  User = data
+                  Assistant = prompt } })
 
 type Response =
     { Items: RequestItem list }
 
-    static member internal fromPrompt(value: string) = Json.deserialize<Response> value
+    static member internal fromOpenAIResponse(response: OpenAI.Domain.Response) =
+        Json.deserialize<Response> response.Content
