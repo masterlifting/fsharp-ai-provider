@@ -1,13 +1,20 @@
 module AIProvider.OpenAI.Client
 
-open AIProvider.OpenAI.Domain
+open System
+open AIProvider.OpenAI
+open Web.Http.Domain
 
 let private clients = ClientFactory()
 
-let init (connection: Connection) =
+let init (connection: Domain.Connection) =
     match clients.TryGetValue connection.Token with
     | true, client -> Ok client
     | _ ->
-        let client = Client(connection.Token)
-        clients.TryAdd(connection.Token, client) |> ignore
-        Ok client
+        let baseUrl = "https://api.openai.com/v1"
+        let headers = Map [ "Authorization", [ $"Bearer {connection.Token}" ] ] |> Some
+
+        { BaseUrl = baseUrl; Headers = headers }
+        |> Web.Http.Client.init
+        |> Result.map (fun client ->
+            clients.TryAdd(connection.Token, client) |> ignore
+            client)

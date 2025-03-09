@@ -6,6 +6,7 @@
     </PropertyGroup>
     <ItemGroup>
       <Compile Include="clients\open_ai\Domain.fs" />
+      <Compile Include="clients\open_ai\DataAccess.fs" />
       <Compile Include="clients\open_ai\Client.fs" />
       <Compile Include="clients\open_ai\Request.fs" />
       <Compile Include="Client.fs" />
@@ -14,5 +15,6 @@
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\fsharp-infrastructure\src\fsharp-infrastructure.fsproj" />
+      <ProjectReference Include="..\..\fsharp-web\src\fsharp-web.fsproj" />
     </ItemGroup>
 </Project>
