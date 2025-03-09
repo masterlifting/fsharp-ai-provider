@@ -9,6 +9,5 @@ open AIProvider.Services.Culture.Domain
 let translate (request: Request) (provider: Client.Provider) : Async<Result<Response, Error'>> =
     match provider with
     | Client.Provider.OpenAI client ->
-        client
-        |> OpenAI.Request.make (request.toPrompt ())
-        |> ResultAsync.bind Response.tryParse
+        request.toPrompt ()
+        |> ResultAsync.wrap (fun prompt -> client |> OpenAI.Request.make prompt |> ResultAsync.bind Response.fromPrompt)

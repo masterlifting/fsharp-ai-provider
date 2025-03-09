@@ -2,56 +2,35 @@
 module AIProvider.Services.Culture.Domain
 
 open Infrastructure.Domain
-open Infrastructure.Prelude
+open Infrastructure.SerDe
 
-type Item =
-    { Id: string
-      Value: string }
-
-    member this.toPromptItem() = $"Id: {this.Id}, Value: {this.Value}"
-
-    static member tryParse(value: string) =
-        let parts = value.Split(',')
-
-        if parts.Length = 2 then
-            let id = parts.[0].Trim()
-            let value = parts.[1].Trim()
-            { Id = id; Value = value } |> Ok
-        else
-            $"Failed to parse item: {value}" |> Error
+type RequestItem = { Id: string; Value: string }
 
 type Request =
     { Culture: Culture
-      Items: Item seq }
+      Items: RequestItem seq }
 
-    member this.toPrompt() =
-        let prompt = $"Translate the following items into {this.Culture.Name} language:"
+    member internal this.toPrompt() =
+        this.Items
+        |> Json.serialize
+        |> Result.map (fun data ->
+            let agenda =
+                $"Translate the following values of the array into {this.Culture.Name} language:"
 
-        let items =
-            this.Items |> Seq.map (_.toPromptItem()) |> Seq.toList |> String.concat "\n"
+            let prompt =
+                "Return the translation in the following format:\n"
+                + "```json\n"
+                + "{\n"
+                + "  \"Items\": [\n"
+                + "    { \"Id\": \"<id>\", \"Value\": \"<value>\" }\n"
+                + "  ]\n"
+                + "}\n"
+                + "```"
 
-        $"{prompt}\n{items}"
+            $"{agenda}\n{data}\n{prompt}")
 
-    static member tryParse(value: string) =
-        let parts = value.Split('\n')
-
-        if parts.Length > 1 then
-            let culture = parts.[0].Trim() |> Culture.create
-            let items = parts.[1..] |> Seq.map Item.tryParse |> Result.choose
-
-            match items with
-            | Ok items -> { Culture = culture; Items = items } |> Ok
-            | Error errors -> $"Failed to parse items: {errors}" |> Error
-        else
-            $"Failed to parse request: {value}" |> Error
 
 type Response =
-    { Items: Item list }
+    { Items: RequestItem list }
 
-    static member tryParse(value: string) =
-        let parts = value.Split('\n')
-        let items = parts |> Seq.map Item.tryParse |> Result.choose
-
-        match items with
-        | Ok items -> { Items = items |> Seq.toList } |> Ok
-        | Error errors -> $"Failed to parse items: {errors}" |> NotSupported |> Error
+    static member internal fromPrompt(value: string) = Json.deserialize<Response> value
