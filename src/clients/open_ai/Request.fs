@@ -16,7 +16,7 @@ let make (request: Domain.Request) ct =
 
         let httpContent =
             request.ToEntity()
-            |> Json.serialize
+            |> Json.serialize' jsonOptions
             |> Result.map (fun data ->
                 String
                     {| Data = data

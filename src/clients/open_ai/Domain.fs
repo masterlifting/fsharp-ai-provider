@@ -3,10 +3,13 @@ module AIProvider.OpenAI.Domain
 
 open System
 open System.Collections.Concurrent
+open System.Text.Json
 
 type Client = Web.Http.Domain.Client.Client
 type ClientFactory = ConcurrentDictionary<string, Client>
 
+let internal jsonOptions = JsonSerializerOptions (PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase)
+    
 type Connection = { Token: string }
 
 type Model =
