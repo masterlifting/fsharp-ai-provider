@@ -8,29 +8,23 @@ open System.Text.Json
 type Client = Web.Http.Domain.Client.Client
 type ClientFactory = ConcurrentDictionary<string, Client>
 
-let internal jsonOptions = JsonSerializerOptions (PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase)
-    
-type Connection = { Token: string }
+let internal jsonOptions =
+    JsonSerializerOptions(PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase)
+
+type Connection = { Token: string; ProjectId: string }
 
 type Model =
-    | Gpt4o
-    | Gpt4oMini
-    | Gpt4_5Preview
+    | Gpt3_5Turbo
 
     member this.Name =
         match this with
-        | Gpt4o -> "gpt-4o"
-        | Gpt4oMini -> "gpt-4o-mini"
-        | Gpt4_5Preview -> "gpt-4.5-preview"
+        | Gpt3_5Turbo -> "gpt-3.5-turbo"
 
-type Content =
-    { System: string
-      User: string
-      Assistant: string }
+type Message = { Role: string; Content: string }
 
 type Request =
     { Model: Model
       Store: bool
-      Content: Content }
+      Messages: Message list }
 
-type Response = { Role: string; Content: string }
+type Response = { Messages: Message list }

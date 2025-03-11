@@ -11,7 +11,7 @@ open Web.Http.Domain
 let make (request: Domain.Request) ct =
     fun client ->
         let httpRequest =
-            { Path = "/chat/completions"
+            { Path = "/v1/chat/completions"
               Headers = None }
 
         let httpContent =
