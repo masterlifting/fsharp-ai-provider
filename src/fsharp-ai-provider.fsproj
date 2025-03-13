@@ -11,6 +11,8 @@
       <Compile Include="clients\open_ai\Request.fs" />
       <Compile Include="Client.fs" />
       <Compile Include="services\culture\Domain.fs" />
+      <Compile Include="services\culture\OpenAI.Domain.fs" />
+      <Compile Include="services\culture\OpenAI.Service.fs" />
       <Compile Include="services\culture\Service.fs" />
     </ItemGroup>
     <ItemGroup>
