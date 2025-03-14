@@ -1,4 +1,3 @@
-[<RequireQualifiedAccess>]
 module AIProvider.OpenAI.Request
 
 open System
@@ -8,6 +7,7 @@ open AIProvider.OpenAI
 open AIProvider.OpenAI.DataAccess
 open Web.Http.Domain
 
+[<RequireQualifiedAccess>]
 module Chat =
 
     let completions (request: Domain.Request) ct =

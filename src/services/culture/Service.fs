@@ -1,23 +1,13 @@
 [<RequireQualifiedAccess>]
 module AIProvider.Services.Culture.Service
 
-open System
-open System.Text.RegularExpressions
-open AIProvider
+open AIProvider.Services.Culture.DataAccess
+open AIProvider.Services.Culture.Domain
 
-let tokenize (value: string) ([<ParamArray>] args: obj[]) =
-    Regex.Replace(
-        value,
-        @"\{(\d+)\}",
-        fun m ->
-            let index = int m.Groups.[1].Value
-
-            if index < args.Length then
-                args.[index].ToString()
-            else
-                m.Value
-    )
-
+let tryGetFromStorage (request: Request) (storage: CultureItemStorage)=
+    let items = request.Items |> Seq.map (fun item -> { item with Value = item.Value.ToUpper() }) |> Seq.toList
+    { Items = items }
+    
 let translate request ct =
     function
-    | Client.Provider.OpenAI client -> client |> OpenAI.Service.translate request ct
+    | AIProvider.Client.Provider.OpenAI client -> client |> OpenAI.Service.translate request ct
