@@ -1,7 +1,7 @@
-﻿module AIProvider.OpenAI.DataAccess
+﻿module AIProvider.DataAccess.OpenAI
 
 open System
-open AIProvider.OpenAI.Domain
+open AIProvider.Domain
 
 type MessageEntity(message: Message) =
     new() =
@@ -39,6 +39,3 @@ type ResponseEntity() =
 
     member this.ToDomain() =
         { Messages = this.Choices |> Array.map _.Message.ToDomain() |> Array.toList }
-
-type internal Request with
-    member internal this.ToEntity() = RequestEntity(this)

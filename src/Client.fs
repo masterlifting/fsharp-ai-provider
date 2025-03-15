@@ -1,9 +1,9 @@
 ﻿[<RequireQualifiedAccess>]
 module AIProvider.Client
 
-type Provider = OpenAI of AIProvider.OpenAI.Domain.Client
+type Provider = OpenAI of AIProvider.Domain.OpenAI.Client
 
-type Connection = OpenAI of AIProvider.OpenAI.Domain.Connection
+type Connection = OpenAI of AIProvider.Domain.OpenAI.Connection
 
 let init connection =
     match connection with

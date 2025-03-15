@@ -1,12 +1,12 @@
 [<AutoOpen>]
-module internal AIProvider.Services.Culture.OpenAI.Domain.Request
+module internal AIProvider.Services.Culture.OpenAI.Request
 
 open Infrastructure.SerDe
-open AIProvider.OpenAI
-open AIProvider.Services.Culture.Domain
+open AIProvider.Domain
+open AIProvider.Services.Domain
 
-type internal Request with
-    member this.toPrompt() =
+type internal Culture.Request with
+    member this.ToPrompt() =
         this.Items
         |> Json.serialize
         |> Result.map (fun data ->

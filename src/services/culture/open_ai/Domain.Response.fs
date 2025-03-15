@@ -1,15 +1,16 @@
 ﻿[<AutoOpen>]
-module internal AIProvider.Services.Culture.OpenAI.Domain.Response
+module internal AIProvider.Services.Culture.OpenAI.Response
 
-open Infrastructure.Domain
 open Infrastructure.SerDe
-open AIProvider.Services.Culture.Domain
+open Infrastructure.Domain
+open AIProvider.Domain
+open AIProvider.Services.Domain
 
-type internal AIProvider.OpenAI.Domain.Response with
+type internal OpenAI.Response with
 
-    member this.toCulture() =
+    member this.ToCulture() =
         match this.Messages.Length = 1 with
-        | true -> Json.deserialize<Response> this.Messages[0].Content
+        | true -> Json.deserialize<Culture.Response> this.Messages[0].Content
         | false ->
             Error
             <| Operation
