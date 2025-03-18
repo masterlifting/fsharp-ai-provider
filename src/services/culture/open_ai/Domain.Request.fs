@@ -23,7 +23,7 @@ type internal Culture.Request with
                     + "Return the translation in the following format:\n"
                     + "{\n"
                     + "  \"Items\": [\n"
-                    + "    { \"Id\": \"<id>\", \"Value\": \"<value>\" }\n"
+                    + "    { \"Id\": \"<id>\", \"Value\": \"<value>\", \"Result\": \"<translation>\" },\n"
                     + "  ]\n"
                     + "}\n"
                     + "\n\n"

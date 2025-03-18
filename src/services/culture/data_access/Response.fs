@@ -11,19 +11,17 @@ type Storage = Storage of Storage.Provider
 
 type StorageType = FileSystem of Persistence.FileSystem.Domain.Connection
 
-type ResponseItemEntity(item: ResponseItem, version: int) =
+type ResponseItemEntity(item: ResponseItem) =
     new() =
         ResponseItemEntity(
             { Id = String.Empty
               Value = String.Empty
-              Result = None },
-            0
+              Result = None }
         )
 
     member val Id = item.Id with get, set
     member val Value = item.Value with get, set
     member val Result = item.Result with get, set
-    member val Version = version with get, set
 
     member this.ToDomain() =
         { Id = this.Id
@@ -35,7 +33,7 @@ type ResponseEntity(culture: Culture, response: Response) =
     new() = ResponseEntity(Culture.createDefault (), { Items = [] })
 
     member val Culture = culture.Code with get, set
-    member val Items = response.Items |> Seq.map (fun x -> ResponseItemEntity(x, 0)) |> Array.ofSeq with get, set
+    member val Items = response.Items |> Seq.map ResponseItemEntity |> Array.ofSeq with get, set
 
 let private toPersistenceStorage storage =
     storage
@@ -78,29 +76,20 @@ module private FileSystem =
             |> loadData
             |> ResultAsync.map (fun data ->
                 match data |> Seq.tryFindIndex (fun x -> x.Culture = culture.Code) with
-                | None ->
-                    let newResponse = ResponseEntity(culture, response)
-                    data[data.Length] <- newResponse
-                    data
+                | None -> [| ResponseEntity(culture, response) |]
                 | Some index ->
                     let responseEntity = data[index]
 
-                    let responseItemEntities =
+                    let newResponseItemEntities =
                         response.Items
-                        |> Seq.collect (fun responseItem ->
-                            match
-                                responseEntity.Items
-                                |> Seq.tryFind (fun responseItemEntity -> responseItemEntity.Id = responseItem.Id)
-                            with
-                            | None -> [ ResponseItemEntity(responseItem, 0) ]
-                            | Some existingItemEntity ->
-                                existingItemEntity.Version <- existingItemEntity.Version + 1
-                                let newItemEntity = ResponseItemEntity(responseItem, 0)
-                                [ existingItemEntity; newItemEntity ])
-                        |> Seq.toArray
+                        |> Seq.map (fun responseItem ->
+                            match responseEntity.Items |> Seq.tryFind (fun x -> x.Id = responseItem.Id) with
+                            | None -> Some <| ResponseItemEntity(responseItem)
+                            | Some itemEntity -> None)
+                        |> Seq.choose id
+                        |> Array.ofSeq
 
-                    responseEntity.Items <- responseItemEntities
-                    data[index] <- responseEntity
+                    responseEntity.Items <- (responseEntity.Items |> Array.append newResponseItemEntities)
                     data)
             |> ResultAsync.bindAsync (fun data -> client |> Command.Json.save data)
             |> ResultAsync.map (fun _ -> response)

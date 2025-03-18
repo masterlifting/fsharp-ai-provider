@@ -23,19 +23,23 @@ let translate request ct =
                         |> OpenAI.Service.translate request ct
                         |> ResultAsync.bindAsync (fun r -> deps.Storage |> Response.Command.set request.Culture r)
                 | Some cached ->
-                    let translatedItems = cached.Items |> List.filter _.Result.IsSome
                     let untranslatedItems = cached.Items |> List.filter _.Result.IsNone
 
-                    let request =
-                        { request with
-                            Items = untranslatedItems |> List.map _.ToRequestItem() }
+                    match untranslatedItems.Length with
+                    | 0 -> cached |> Ok |> async.Return
+                    | _ ->
+                        let translatedItems = cached.Items |> List.filter _.Result.IsSome
 
-                    match deps.Provider with
-                    | AIProvider.Client.Provider.OpenAI client ->
-                        client
-                        |> OpenAI.Service.translate request ct
-                        |> ResultAsync.map (fun x ->
-                            let items = translatedItems @ x.Items
-                            { x with Items = items })
-                        |> ResultAsync.bindAsync (fun r -> deps.Storage |> Response.Command.set request.Culture r)
+                        let request =
+                            { request with
+                                Items = untranslatedItems |> List.map _.ToRequestItem() }
+
+                        match deps.Provider with
+                        | AIProvider.Client.Provider.OpenAI client ->
+                            client
+                            |> OpenAI.Service.translate request ct
+                            |> ResultAsync.bindAsync (fun r -> deps.Storage |> Response.Command.set request.Culture r)
+                            |> ResultAsync.map (fun r ->
+                                { r with
+                                    Items = r.Items @ translatedItems })
         }
