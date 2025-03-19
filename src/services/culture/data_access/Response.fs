@@ -35,15 +35,6 @@ type ResponseEntity(culture: Culture, response: Response) =
     member val Culture = culture.Code with get, set
     member val Items = response.Items |> Seq.map ResponseItemEntity |> Array.ofSeq with get, set
 
-let private toPersistenceStorage storage =
-    storage
-    |> function
-        | Storage storage -> storage
-
-let init storageType =
-    match storageType with
-    | FileSystem connection -> connection |> Storage.Connection.FileSystem |> Storage.init
-    |> Result.map Storage
 
 module private FileSystem =
     open Persistence.FileSystem
@@ -58,17 +49,20 @@ module private FileSystem =
             |> ResultAsync.map (Seq.tryFind (fun x -> x.Culture = request.Culture.Code))
             |> ResultAsync.map (
                 Option.map (fun x ->
+                    let responseEntityItemsMap =
+                        x.Items |> Seq.map (fun item -> item.Id, item) |> Map.ofSeq
+
                     request.Items
                     |> Seq.map (fun requestItem ->
-                        match x.Items |> Seq.tryFind (fun responseItem -> responseItem.Id = requestItem.Id) with
+                        match responseEntityItemsMap |> Map.tryFind requestItem.Id with
+                        | Some itemEntity -> itemEntity.ToDomain()
                         | None ->
                             { Id = requestItem.Id
                               Value = requestItem.Value
-                              Result = None }
-                        | Some itemEntity -> itemEntity.ToDomain())
+                              Result = None })
                     |> Seq.toList)
             )
-            |> ResultAsync.map (Option.map (fun resultItems -> { Items = resultItems }))
+            |> ResultAsync.map (Option.map (fun items -> { Items = items }))
 
     module Command =
         let set (culture: Culture) (response: Response) client =
@@ -77,30 +71,52 @@ module private FileSystem =
             |> ResultAsync.map (fun data ->
                 match data |> Seq.tryFindIndex (fun x -> x.Culture = culture.Code) with
                 | None -> [| ResponseEntity(culture, response) |]
-                | Some index ->
-                    let responseEntity = data[index]
+                | Some rIndex ->
+                    let responseEntity = data[rIndex]
+
+                    let responseEntityItemsMap =
+                        responseEntity.Items |> Seq.mapi (fun i item -> item.Id, i) |> Map.ofSeq
+
+                    let updatedResponseItemEntities = Array.copy responseEntity.Items
 
                     let newResponseItemEntities =
                         response.Items
-                        |> Seq.map (fun responseItem ->
-                            match responseEntity.Items |> Seq.tryFind (fun x -> x.Id = responseItem.Id) with
-                            | None -> Some <| ResponseItemEntity(responseItem)
-                            | Some itemEntity -> None)
-                        |> Seq.choose id
-                        |> Array.ofSeq
+                        |> Seq.fold
+                            (fun acc responseItem ->
+                                let responseItemEntity = ResponseItemEntity(responseItem)
 
-                    responseEntity.Items <- (responseEntity.Items |> Array.append newResponseItemEntities)
+                                match responseEntityItemsMap |> Map.tryFind responseItem.Id with
+                                | Some riIndex ->
+                                    updatedResponseItemEntities[riIndex] <- responseItemEntity
+                                    acc
+                                | None -> responseItemEntity :: acc)
+                            []
+                        |> List.rev
+                        |> Array.ofList
+
+                    responseEntity.Items <- updatedResponseItemEntities |> Array.append newResponseItemEntities
+
                     data)
             |> ResultAsync.bindAsync (fun data -> client |> Command.Json.save data)
             |> ResultAsync.map (fun _ -> response)
 
-module Query =
+let private toPersistenceStorage storage =
+    storage
+    |> function
+        | Storage storage -> storage
+
+let init storageType =
+    match storageType with
+    | FileSystem connection -> connection |> Storage.Connection.FileSystem |> Storage.init
+    |> Result.map Storage
+
+module internal Query =
     let get request storage =
         match storage |> toPersistenceStorage with
         | Storage.FileSystem client -> client |> FileSystem.Query.get request
         | _ -> $"Storage {storage}" |> NotSupported |> Error |> async.Return
 
-module Command =
+module internal Command =
     let set culture response storage =
         match storage |> toPersistenceStorage with
         | Storage.FileSystem client -> client |> FileSystem.Command.set culture response
