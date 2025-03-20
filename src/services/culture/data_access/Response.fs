@@ -11,8 +11,6 @@ open AIProvider.Services.Domain
 let private JsonOptions =
     Text.Json.JsonSerializerOptions(Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
 
-let private MD5 = System.Security.Cryptography.MD5.Create()
-
 type Storage = Storage of Storage.Provider
 
 type StorageType = FileSystem of Persistence.FileSystem.Domain.Connection
@@ -20,7 +18,6 @@ type StorageType = FileSystem of Persistence.FileSystem.Domain.Connection
 type ResponseItemEntity(item: ResponseItem) =
     new() = ResponseItemEntity({ Value = String.Empty; Result = None })
 
-    member val Id = MD5 |> String.toDeterministicHash item.Value with get, set
     member val Value = item.Value with get, set
     member val Result = item.Result with get, set
 
@@ -50,13 +47,11 @@ module private FileSystem =
             |> ResultAsync.map (
                 Option.map (fun x ->
                     let responseEntityItemsMap =
-                        x.Items |> Seq.map (fun item -> item.Id, item) |> Map.ofSeq
+                        x.Items |> Seq.map (fun item -> item.Value, item) |> Map.ofSeq
 
                     request.Items
                     |> Seq.map (fun requestItem ->
-                        let requestItemId = MD5 |> String.toDeterministicHash requestItem.Value
-
-                        match responseEntityItemsMap |> Map.tryFind requestItemId with
+                        match responseEntityItemsMap |> Map.tryFind requestItem.Value with
                         | Some itemEntity -> itemEntity.ToDomain()
                         | None ->
                             { Value = requestItem.Value
@@ -71,12 +66,12 @@ module private FileSystem =
             |> loadData
             |> ResultAsync.map (fun data ->
                 match data |> Seq.tryFindIndex (fun x -> x.Culture = culture.Code) with
-                | None -> [| ResponseEntity(culture, response) |]
+                | None -> data |> Array.append [| ResponseEntity(culture, response) |]
                 | Some rIndex ->
                     let responseEntity = data[rIndex]
 
                     let responseEntityItemsMap =
-                        responseEntity.Items |> Seq.mapi (fun i item -> item.Id, i) |> Map.ofSeq
+                        responseEntity.Items |> Seq.mapi (fun i item -> item.Value, i) |> Map.ofSeq
 
                     let updatedResponseItemEntities = Array.copy responseEntity.Items
 
@@ -85,9 +80,8 @@ module private FileSystem =
                         |> Seq.fold
                             (fun acc responseItem ->
                                 let responseItemEntity = ResponseItemEntity(responseItem)
-                                let responseItemId = MD5 |> String.toDeterministicHash responseItem.Value
 
-                                match responseEntityItemsMap |> Map.tryFind responseItemId with
+                                match responseEntityItemsMap |> Map.tryFind responseItem.Value with
                                 | Some riIndex ->
                                     updatedResponseItemEntities[riIndex] <- responseItemEntity
                                     acc

@@ -14,7 +14,11 @@ type internal Culture.Request with
             let assistant =
                 { Role = "assistant"
                   Content =
-                    "You are a helpful translator that can translate the following values of the array into the requested language." }
+                    "You are a helpful translator that can translate the following values of the array into the requested language.\n\n
+                    Try to analyze the context from the input data as the context may help you to provide a better translation.\n\n
+                    If you see the culture-specific parameters in the input data, try to use them to provide a more accurate translation.\n\n
+                    If you see some symbols and it is messy, try to clean it up.\n\n
+                    Use grammar and punctuation rules to provide a more human-readable translation." }
 
             let user =
                 { Role = "user"
@@ -31,5 +35,5 @@ type internal Culture.Request with
                     + data }
 
             { Model = Model.Gpt3_5Turbo
-              Store = false
+              Store = true
               Messages = [ assistant; user ] })
