@@ -18,7 +18,8 @@ type StorageType = FileSystem of Persistence.FileSystem.Domain.Connection
 type ResponseItemEntity(item: ResponseItem) =
     new() = ResponseItemEntity({ Value = String.Empty; Result = None })
 
-    member val Value = item.Value with get, set
+    member val Key = item.Value with get, set
+    member val Value = List.empty<string> with get, set
     member val Result = item.Result with get, set
 
     member this.ToDomain() =
@@ -51,6 +52,7 @@ module private FileSystem =
 
                     request.Items
                     |> Seq.map (fun requestItem ->
+                        
                         match responseEntityItemsMap |> Map.tryFind requestItem.Value with
                         | Some itemEntity -> itemEntity.ToDomain()
                         | None ->
