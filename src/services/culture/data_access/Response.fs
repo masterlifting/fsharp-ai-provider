@@ -18,7 +18,7 @@ type StorageType = FileSystem of Persistence.FileSystem.Domain.Connection
 type ResponseItemEntity(item: ResponseItem) =
     new() = ResponseItemEntity({ Value = String.Empty; Result = None })
 
-    member val Hash = item.Value.GetHashCode() with get, set
+    member val Id = item.Value |>  String.toDeterministicHash with get, set
     member val Value = item.Value with get, set
     member val Result = item.Result with get, set
 
@@ -36,7 +36,8 @@ type ResponseEntity(culture: Culture, response: Response) =
 
 module private FileSystem =
     open Persistence.FileSystem
-
+    
+    let private Sha256 = System.Security.Cryptography.SHA256.Create()
     let private loadData = Query.Json.get<ResponseEntity>
 
     module Query =
@@ -48,11 +49,11 @@ module private FileSystem =
             |> ResultAsync.map (
                 Option.map (fun x ->
                     let responseEntityItemsMap =
-                        x.Items |> Seq.map (fun item -> item.Hash, item) |> Map.ofSeq
+                        x.Items |> Seq.map (fun item -> item.Id, item) |> Map.ofSeq
 
                     request.Items
                     |> Seq.map (fun requestItem ->
-                        let requestItemId = requestItem.Value.GetHashCode()
+                        let requestItemId = requestItem.Value |> String.toDeterministicHash' Sha256
 
                         match responseEntityItemsMap |> Map.tryFind requestItemId with
                         | Some itemEntity -> itemEntity.ToDomain()
@@ -74,7 +75,7 @@ module private FileSystem =
                     let responseEntity = data[rIndex]
 
                     let responseEntityItemsMap =
-                        responseEntity.Items |> Seq.mapi (fun i item -> item.Hash, i) |> Map.ofSeq
+                        responseEntity.Items |> Seq.mapi (fun i item -> item.Id, i) |> Map.ofSeq
 
                     let updatedResponseItemEntities = Array.copy responseEntity.Items
 
@@ -83,7 +84,7 @@ module private FileSystem =
                         |> Seq.fold
                             (fun acc responseItem ->
                                 let responseItemEntity = ResponseItemEntity(responseItem)
-                                let responseItemId = responseItem.Value.GetHashCode()
+                                let responseItemId = responseItem.Value |> String.toDeterministicHash' Sha256
 
                                 match responseEntityItemsMap |> Map.tryFind responseItemId with
                                 | Some riIndex ->
