@@ -18,7 +18,8 @@ type internal Culture.Request with
                     Try to analyze the context from the input data as the context may help you to provide a better translation.\n\n
                     If you see the culture-specific parameters in the input data, try to use them to provide a more accurate translation.\n\n
                     If you see some symbols and it is messy, try to clean it up.\n\n
-                    Use grammar and punctuation rules to provide a more human-readable translation." }
+                    Use grammar and punctuation rules to provide a more human-readable translation.\n\n
+                    If you encounter the ' symbol, don't remove it, it is a part of the translation placeholders." }
 
             let user =
                 { Role = "user"
