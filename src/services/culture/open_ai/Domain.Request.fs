@@ -11,30 +11,24 @@ type internal Culture.Request with
         |> Json.serialize
         |> Result.map (fun data ->
 
+            let left, right = this.Placeholder.Values
+
             let assistant =
                 { Role = "assistant"
                   Content =
-                    "You are a helpful translator that can translate the following values of the array into the requested language.\n\n
-                    Try to analyze the context from the input data as the context may help you to provide a better translation.\n\n
-                    If you see the culture-specific parameters in the input data, try to use them to provide a more accurate translation.\n\n
-                    If you see some symbols and it is messy, try to clean it up.\n\n
-                    Use grammar and punctuation rules to provide a more human-readable translation.\n\n
-                    If you encounter the ' symbol, don't remove it, it is a part of the translation placeholders." }
+                    $"You are an expert translator. Translate the provided array values into the requested language.\n\n\
+                    Consider the context carefully to ensure accurate translations.\n\n\
+                    Preserve placeholders like {left}<text>{right} exactly as provided. Do not remove the placeholder symbols around the <text>.\n\n\
+                    Correct any messy symbols and ensure translations follow proper grammar and punctuation." }
 
             let user =
                 { Role = "user"
                   Content =
-                    $"Translate the following values of the array into {this.Culture.Name} language.\n\n"
-                    + "Return the translation in the following format:\n"
-                    + "{\n"
-                    + "  \"Items\": [\n"
-                    + "    { \"Id\": \"<id>\", \"Value\": \"<value>\", \"Result\": \"<translation>\" },\n"
-                    + "  ]\n"
-                    + "}\n"
-                    + "\n\n"
-                    + "Data to translate:\n"
-                    + data }
+                    $"Translate the following array values into {this.Culture.Name}.\n\n\
+                    Return translations strictly in this JSON format:\n\
+                    [\n  {{ \"Value\": \"<original>\", \"Result\": \"<translation>\" }}\n]\n\n\
+                    Data:\n{data}" }
 
             { Model = Model.Gpt3_5Turbo
-              Store = true
+              Store = false
               Messages = [ assistant; user ] })

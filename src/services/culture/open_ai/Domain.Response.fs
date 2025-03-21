@@ -8,9 +8,14 @@ open AIProvider.Services.Domain
 
 type internal OpenAI.Response with
 
-    member this.ToCulture() =
+    member this.ToCulture placeholder =
         match this.Messages.Length = 1 with
-        | true -> Json.deserialize<Culture.Response> this.Messages[0].Content
+        | true ->
+            this.Messages[0].Content
+            |> Json.deserialize<Culture.ResponseItem array>
+            |> Result.map (fun items ->
+                { Placeholder = placeholder
+                  Items = items |> Array.toList })
         | false ->
             Error
             <| Operation

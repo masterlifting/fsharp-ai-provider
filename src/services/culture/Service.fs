@@ -32,7 +32,7 @@ let translate request ct =
                     | _ ->
                         let request =
                             { request with
-                                Items = untranslatedItems |> List.map _.ToRequestItem() }
+                                Items = untranslatedItems |> List.map (fun i -> { Value = i.Value }) }
 
                         deps
                         |> proceed request ct

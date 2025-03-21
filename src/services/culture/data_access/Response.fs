@@ -16,63 +16,42 @@ type Storage = Storage of Storage.Provider
 
 type StorageType = FileSystem of Persistence.FileSystem.Domain.Connection
 
-[<Literal>]
-let private KEY_PATTERN = "'([^']*)'"
-
-[<Literal>]
-let private VALUE_PATTERN = "'[%d]'"
-
-let private createValuePlaceholder index = $"[%d{index}]"
-
-// Input: "Hello, my name is 'John'. I like to 'study'."
-// Output: "Hello, my name is '[0]'. I like to '[1]'.", ["John"; "study"]
-let createKeyValues text =
-    let values = Regex.Matches(text, KEY_PATTERN) |> Seq.map _.Value |> Seq.toList
-
-    let key =
-        let mutable result = Regex.Replace(text, KEY_PATTERN, VALUE_PATTERN)
-
-        for i in 0 .. values.Length - 1 do
-            let startIndex = result.IndexOf(VALUE_PATTERN)
-            let endIndex = startIndex + VALUE_PATTERN.Length
-            let placeholder = createValuePlaceholder i
-            result <- result.Substring(0, startIndex) + placeholder + result.Substring(endIndex)
-
-        result
-
-    key, values
-
 type ResponseItemEntity(item: ResponseItem) =
     new() = ResponseItemEntity({ Value = String.Empty; Result = None })
 
     member val Value = item.Value with get, set
     member val Result = item.Result with get, set
 
-    member this.ParseResult(values: string list) =
-
-        match this.Result with
-        | None -> None
-        | Some result ->
-
-            let mutable result = result
-
-            for i in 0 .. values.Length - 1 do
-                let placeholder = createValuePlaceholder i
-                let mutable index = result.IndexOf(placeholder)
-
-                while index <> -1 do
-                    result <- result.Replace(placeholder, values[i])
-                    index <- result.IndexOf(placeholder)
-
-            result |> Some
-
 type ResponseEntity(culture: Culture, response: Response) =
 
-    new() = ResponseEntity(Culture.createDefault (), { Items = [] })
+    new() =
+        ResponseEntity(
+            Culture.createDefault (),
+            { Placeholder = Placeholder.create '''
+              Items = [] }
+        )
 
     member val Culture = culture.Code with get, set
     member val Items = response.Items |> Seq.map ResponseItemEntity |> Array.ofSeq with get, set
 
+let inline private toPattern (left, right) = $"%c{left}([^%c{right}]*)'"
+let inline private toValuePlaceholder index = $"[%d{index}]"
+
+//TODO: Add support Result type
+let inline private serialize placeholder text =
+    Regex.Matches(text, placeholder |> toPattern)
+    |> Seq.mapi (fun i x -> i, x.Value)
+    |> Seq.fold
+        (fun (key: string, values) (i, value) -> key.Replace(value, i |> toValuePlaceholder), value :: values)
+        (text, [])
+
+//TODO: Add support Result type
+let inline private deserialize values result =
+    result
+    |> Option.map (fun result ->
+        values
+        |> Seq.mapi (fun i x -> i, x)
+        |> Seq.fold (fun (result: string) (i, value) -> result.Replace(i |> toValuePlaceholder, value)) result)
 
 module private FileSystem =
     open Persistence.FileSystem
@@ -87,24 +66,31 @@ module private FileSystem =
             |> ResultAsync.map (Seq.tryFind (fun x -> x.Culture = request.Culture.Code))
             |> ResultAsync.map (
                 Option.map (fun x ->
-                    let responseEntityItemsMap =
-                        x.Items |> Seq.map (fun item -> item.Value, item) |> Map.ofSeq
-
                     request.Items
                     |> Seq.map (fun requestItem ->
 
-                        let requestItemKey, requestItemValues = requestItem.Value |> createKeyValues
+                        let requestItemKey, requestItemValues =
+                            requestItem.Value |> serialize request.Placeholder.Values
 
-                        match responseEntityItemsMap |> Map.tryFind requestItemKey with
+                        match
+                            x.Items
+                            |> Seq.map (fun item -> item.Value, item)
+                            |> Map.ofSeq
+                            |> Map.tryFind requestItemKey
+                        with
                         | Some itemEntity ->
                             { Value = requestItem.Value
-                              Result = itemEntity.ParseResult requestItemValues }
+                              Result = itemEntity.Result |> deserialize requestItemValues }
                         | None ->
                             { Value = requestItem.Value
                               Result = None })
                     |> Seq.toList)
             )
-            |> ResultAsync.map (Option.map (fun items -> { Items = items }))
+            |> ResultAsync.map (
+                Option.map (fun items ->
+                    { Placeholder = request.Placeholder
+                      Items = items })
+            )
 
     module Command =
         let set (culture: Culture) (response: Response) client =
@@ -125,8 +111,11 @@ module private FileSystem =
                         response.Items
                         |> Seq.fold
                             (fun acc responseItem ->
-                                let responseItemKey = responseItem.Value |> (createKeyValues >> fst)
-                                let responseItemResult = responseItem.Result |> Option.map (createKeyValues >> fst)
+                                let responseItemKey =
+                                    responseItem.Value |> (serialize response.Placeholder.Values >> fst)
+
+                                let responseItemResult =
+                                    responseItem.Result |> Option.map (serialize response.Placeholder.Values >> fst)
 
                                 let responseItem =
                                     { Value = responseItemKey

@@ -9,4 +9,6 @@ let translate (request: Culture.Request) ct =
     fun client ->
         request.ToPrompt()
         |> ResultAsync.wrap (fun prompt ->
-            client |> Request.Chat.completions prompt ct |> ResultAsync.bind _.ToCulture())
+            client
+            |> Request.Chat.completions prompt ct
+            |> ResultAsync.bind (fun x -> x.ToCulture request.Placeholder))
