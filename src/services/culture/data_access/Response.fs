@@ -27,7 +27,7 @@ type ResponseEntity(culture: Culture, response: Response) =
     new() =
         ResponseEntity(
             Culture.createDefault (),
-            { Placeholder = Placeholder.create '''
+            { Placeholder = Placeholder.create ''' '''
               Items = [] }
         )
 

@@ -10,7 +10,7 @@ type Placeholder =
         match this with
         | Placeholder(left, right) -> left, right
 
-    static member create item = Placeholder(item, item)
+    static member create left right = Placeholder(left, right)
 
 type RequestItem = { Value: string }
 
