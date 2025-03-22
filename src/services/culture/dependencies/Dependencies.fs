@@ -7,5 +7,4 @@ open AIProvider.Services.DataAccess
 
 type Dependencies =
     { Provider: AIProvider.Client.Provider
-      Storage: Culture.Response.Storage
-      translate: Request -> Async<Result<Response, Error'>> }
+      Storage: Culture.Response.Storage }
