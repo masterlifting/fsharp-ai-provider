@@ -1,7 +1,7 @@
-﻿module AIProvider.DataAccess.OpenAI
+﻿module AIProvider.Clients.DataAccess.OpenAI
 
 open System
-open AIProvider.Domain
+open AIProvider.Clients.Domain.OpenAI
 
 type MessageEntity(message: Message) =
     new() =

@@ -7,7 +7,7 @@
     <ItemGroup>
       <Compile Include="clients\open_ai\Domain.fs" />
       <Compile Include="clients\open_ai\DataAccess.fs" />
-      <Compile Include="clients\open_ai\Client.fs" />
+      <Compile Include="clients\open_ai\OpenAI.fs" />
       <Compile Include="clients\open_ai\Services.fs" />
       <Compile Include="Client.fs" />
       <Compile Include="services\culture\domain\Domain.fs" />

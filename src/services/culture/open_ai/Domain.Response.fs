@@ -3,7 +3,7 @@ module internal AIProvider.Services.Culture.OpenAI.Response
 
 open Infrastructure.SerDe
 open Infrastructure.Domain
-open AIProvider.Domain
+open AIProvider.Clients.Domain
 open AIProvider.Services.Domain
 
 type internal OpenAI.Response with

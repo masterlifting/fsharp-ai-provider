@@ -1,8 +1,8 @@
-module AIProvider.OpenAI.Client
+module AIProvider.Clients.OpenAI
 
 open System
 open Web.Http.Domain
-open AIProvider.Domain
+open AIProvider.Clients.Domain
 
 let private clients = ClientFactory()
 

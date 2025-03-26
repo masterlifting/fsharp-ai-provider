@@ -1,10 +1,13 @@
 ﻿[<RequireQualifiedAccess>]
 module AIProvider.Client
 
-type Provider = OpenAI of AIProvider.Domain.OpenAI.Client
+open AIProvider.Clients
+open AIProvider.Clients.Domain
 
-type Connection = OpenAI of AIProvider.Domain.OpenAI.Connection
+type Provider = OpenAI of OpenAI.Client
+
+type Connection = OpenAI of OpenAI.Connection
 
 let init connection =
     match connection with
-    | Connection.OpenAI value -> value |> OpenAI.Client.init |> Result.map Provider.OpenAI
+    | Connection.OpenAI value -> value |> OpenAI.init |> Result.map Provider.OpenAI

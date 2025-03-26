@@ -1,5 +1,4 @@
-[<AutoOpen>]
-module AIProvider.Domain.OpenAI
+module AIProvider.Clients.Domain.OpenAI
 
 open System
 open System.Collections.Concurrent

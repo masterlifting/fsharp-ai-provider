@@ -2,7 +2,7 @@
 module internal AIProvider.Services.Culture.OpenAI.Request
 
 open Infrastructure.SerDe
-open AIProvider.Domain
+open AIProvider.Clients.Domain.OpenAI
 open AIProvider.Services.Domain
 
 type internal Culture.Request with

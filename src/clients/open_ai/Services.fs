@@ -3,8 +3,8 @@ module AIProvider.Services.OpenAI
 open System
 open Infrastructure.Prelude
 open Infrastructure.SerDe
-open AIProvider.Domain
-open AIProvider.DataAccess
+open AIProvider.Clients.Domain
+open AIProvider.Clients.DataAccess
 open Web.Http.Domain
 
 [<RequireQualifiedAccess>]
@@ -19,7 +19,7 @@ module Request =
 
                 let httpContent =
                     OpenAI.RequestEntity(request)
-                    |> Json.serialize' jsonOptions
+                    |> Json.serialize' OpenAI.jsonOptions
                     |> Result.map (fun data ->
                         String
                             {| Data = data
