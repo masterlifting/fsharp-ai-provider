@@ -1,10 +1,11 @@
 module AIProvider.Clients.OpenAI
 
 open System
-open Web.Http.Domain
+open Web.Clients
+open Web.Clients.Domain.Http.Http
 open AIProvider.Clients.Domain
 
-let private clients = ClientFactory()
+let private clients =OpenAI.ClientFactory()
 
 let init (connection: OpenAI.Connection) =
     match clients.TryGetValue connection.Token with
@@ -19,7 +20,7 @@ let init (connection: OpenAI.Connection) =
             |> Some
 
         { Host = host; Headers = headers }
-        |> Web.Http.Client.init
+        |> Http.Client.init
         |> Result.map (fun client ->
             clients.TryAdd(connection.Token, client) |> ignore
             client)
