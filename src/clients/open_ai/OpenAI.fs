@@ -2,10 +2,10 @@ module AIProvider.Clients.OpenAI
 
 open System
 open Web.Clients
-open Web.Clients.Domain.Http.Http
+open Web.Clients.Domain.Http
 open AIProvider.Clients.Domain
 
-let private clients =OpenAI.ClientFactory()
+let private clients = OpenAI.ClientFactory()
 
 let init (connection: OpenAI.Connection) =
     match clients.TryGetValue connection.Token with

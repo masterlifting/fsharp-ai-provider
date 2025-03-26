@@ -3,7 +3,7 @@ module AIProvider.Clients.Domain.OpenAI
 open System
 open System.Collections.Concurrent
 open System.Text.Json
-open Web.Clients.Domain.Http
+open Web.Clients.Domain
 
 type Client = Http.Client
 type ClientFactory = ConcurrentDictionary<string, Client>

@@ -4,7 +4,7 @@ open System
 open Infrastructure.Prelude
 open Infrastructure.SerDe
 open Web.Clients
-open Web.Clients.Domain.Http
+open Web.Clients.Domain
 open AIProvider.Clients.Domain
 open AIProvider.Clients.DataAccess
 
