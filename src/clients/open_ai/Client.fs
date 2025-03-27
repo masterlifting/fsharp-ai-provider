@@ -1,4 +1,4 @@
-module AIProvider.Services.OpenAI
+module AIProvider.Clients.OpenAI.Client
 
 open System
 open Infrastructure.Prelude
@@ -8,7 +8,27 @@ open Web.Clients.Domain
 open AIProvider.Clients.Domain
 open AIProvider.Clients.DataAccess
 
-[<RequireQualifiedAccess>]
+let private clients = OpenAI.ClientFactory()
+
+let init (connection: OpenAI.Connection) =
+    match clients.TryGetValue connection.Token with
+    | true, client -> Ok client
+    | _ ->
+        let host = "https://api.openai.com"
+
+        let headers =
+            Map
+                [ "Authorization", [ $"Bearer {connection.Token}" ]
+                  "OpenAI-Project", [ connection.ProjectId ] ]
+            |> Some
+
+        { Http.Host = host
+          Http.Headers = headers }
+        |> Http.Client.init
+        |> Result.map (fun client ->
+            clients.TryAdd(connection.Token, client) |> ignore
+            client)
+
 module Request =
     module Chat =
 

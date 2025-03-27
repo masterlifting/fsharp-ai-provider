@@ -10,4 +10,4 @@ type Connection = OpenAI of OpenAI.Connection
 
 let init connection =
     match connection with
-    | Connection.OpenAI value -> value |> OpenAI.init |> Result.map Provider.OpenAI
+    | Connection.OpenAI value -> value |> OpenAI.Client.init |> Result.map Provider.OpenAI

@@ -1,5 +1,5 @@
 [<RequireQualifiedAccess>]
-module AIProvider.Services.Culture.Service
+module AIProvider.Services.Culture
 
 open Infrastructure.Domain
 open Infrastructure.Prelude
@@ -10,7 +10,7 @@ open AIProvider.Services.Dependencies
 let private proceed request ct =
     fun (deps: Culture.Dependencies) ->
         match deps.Provider with
-        | AIProvider.Client.Provider.OpenAI client -> client |> OpenAI.Service.translate request ct
+        | AIProvider.Client.Provider.OpenAI client -> client |> OpenAI.Culture.translate request ct
         |> ResultAsync.bindAsync (fun response -> deps.Storage |> Response.Command.set request.Culture response)
 
 let translate request ct =

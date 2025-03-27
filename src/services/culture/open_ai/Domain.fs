@@ -1,8 +1,8 @@
-[<AutoOpen>]
-module internal AIProvider.Services.Culture.OpenAI.Request
+module internal AIProvider.Services.Domain.OpenAI
 
+open Infrastructure.Domain
 open Infrastructure.SerDe
-open AIProvider.Clients.Domain.OpenAI
+open AIProvider.Clients.Domain
 open AIProvider.Services.Domain
 
 type internal Culture.Request with
@@ -14,21 +14,37 @@ type internal Culture.Request with
             let left, right = this.Placeholder.Values
 
             let assistant =
-                { Role = "assistant"
-                  Content =
+                { OpenAI.Role = "assistant"
+                  OpenAI.Content =
                     $"You are an expert translator. Translate the provided array values into the requested language.\n\n\
                     Consider the context carefully to ensure accurate translations.\n\n\
                     Preserve placeholders like {left}<text>{right} exactly as provided. Do not remove the placeholder symbols around the <text>.\n\n\
                     Correct any messy symbols and ensure translations follow proper grammar and punctuation." }
 
             let user =
-                { Role = "user"
-                  Content =
+                { OpenAI.Role = "user"
+                  OpenAI.Content =
                     $"Translate the following array values into {this.Culture.Name}.\n\n\
                     Return translations strictly in this JSON format:\n\
                     [\n  {{ \"Value\": \"<original>\", \"Result\": \"<translation>\" }}\n]\n\n\
                     Data:\n{data}" }
 
-            { Model = Model.Gpt3_5Turbo
-              Store = false
-              Messages = [ assistant; user ] })
+            { OpenAI.Model = OpenAI.Model.Gpt3_5Turbo
+              OpenAI.Store = false
+              OpenAI.Messages = [ assistant; user ] })
+
+type internal OpenAI.Response with
+
+    member this.ToCulture placeholder =
+        match this.Messages.Length = 1 with
+        | true ->
+            this.Messages[0].Content
+            |> Json.deserialize<Culture.ResponseItem array>
+            |> Result.map (fun items ->
+                { Placeholder = placeholder
+                  Items = items |> Array.toList })
+        | false ->
+            Error
+            <| Operation
+                { Message = $"'{this}' was not recognized as a valid response."
+                  Code = (__SOURCE_DIRECTORY__, __SOURCE_FILE__, __LINE__) |> Line |> Some }

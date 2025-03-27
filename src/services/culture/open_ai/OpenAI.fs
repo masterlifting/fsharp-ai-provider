@@ -1,14 +1,14 @@
-module AIProvider.Services.Culture.OpenAI.Service
+module AIProvider.Services.OpenAI.Culture
 
 open Infrastructure.Prelude
-open AIProvider.Services.OpenAI
+open AIProvider.Clients.OpenAI
 open AIProvider.Services.Domain
-open AIProvider.Services.Culture.OpenAI
+open AIProvider.Services.Domain.OpenAI
 
 let translate (request: Culture.Request) ct =
     fun client ->
         request.ToPrompt()
         |> ResultAsync.wrap (fun prompt ->
             client
-            |> Request.Chat.completions prompt ct
+            |> Client.Request.Chat.completions prompt ct
             |> ResultAsync.bind (fun x -> x.ToCulture request.Placeholder))
