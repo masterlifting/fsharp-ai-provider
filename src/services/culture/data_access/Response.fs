@@ -6,6 +6,8 @@ open System.Text.RegularExpressions
 open Infrastructure.Domain
 open Infrastructure.Prelude
 open Persistence
+open Persistence.Storages
+open Persistence.Storages.Domain
 open AIProvider.Services.Domain
 
 // Use UTF-8 encoding for proper Cyrillic support
@@ -14,7 +16,7 @@ let private JsonOptions =
 
 type Storage = Storage of Storage.Provider
 
-type StorageType = FileSystem of Persistence.FileSystem.Domain.Connection
+type StorageType = FileSystem of FileSystem.Connection
 
 type ResponseItemEntity(item: ResponseItem) =
     new() = ResponseItemEntity({ Value = String.Empty; Result = None })
@@ -54,7 +56,7 @@ let inline private deserialize values result =
         |> Seq.fold (fun (result: string) (i, value) -> result.Replace(i |> toValuePlaceholder, value)) result)
 
 module private FileSystem =
-    open Persistence.FileSystem
+    open Persistence.Storages.FileSystem
 
     let private loadData = Query.Json.get<ResponseEntity>
 
