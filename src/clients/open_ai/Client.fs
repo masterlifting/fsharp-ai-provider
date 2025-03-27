@@ -40,7 +40,7 @@ module Request =
 
                 let httpContent =
                     OpenAI.RequestEntity(request)
-                    |> Json.serialize' OpenAI.jsonOptions
+                    |> Json.serialize' OpenAI.JsonOptions
                     |> Result.map (fun data ->
                         Http.RequestContent.String
                             {| Data = data

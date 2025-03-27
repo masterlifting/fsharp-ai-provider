@@ -8,7 +8,7 @@ open AIProvider.Services.Domain
 type internal Culture.Request with
     member this.ToPrompt() =
         this.Items
-        |> Json.serialize
+        |> Json.serialize' OpenAI.JsonOptions
         |> Result.map (fun data ->
 
             let left, right = this.Shield.Values
@@ -18,7 +18,7 @@ type internal Culture.Request with
                   OpenAI.Content =
                     $"You are an expert translator. Translate the provided array values into the requested language.\n\n\
                     Consider the context carefully to ensure accurate translations.\n\n\
-                    Preserve placeholders like {left}<text>{right} exactly as provided. Do not remove the placeholder symbols around the <text>.\n\n\
+                    The symbols are enclosed in: {left}<symbols>{right} should not be translated.\n\n\
                     Correct any messy symbols and ensure translations follow proper grammar and punctuation." }
 
             let user =
@@ -35,13 +35,13 @@ type internal Culture.Request with
 
 type internal OpenAI.Response with
 
-    member this.ToCulture placeholder =
+    member this.ToCulture shield =
         match this.Messages.Length = 1 with
         | true ->
             this.Messages[0].Content
-            |> Json.deserialize<Culture.ResponseItem array>
+            |> Json.deserialize'<Culture.ResponseItem array> OpenAI.JsonOptions
             |> Result.map (fun items ->
-                { Shield = placeholder
+                { Shield = shield
                   Items = items |> Array.toList })
         | false ->
             Error

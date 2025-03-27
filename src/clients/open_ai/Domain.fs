@@ -8,7 +8,7 @@ open Web.Clients.Domain
 type Client = Http.Client
 type ClientFactory = ConcurrentDictionary<string, Client>
 
-let internal jsonOptions =
+let internal JsonOptions =
     JsonSerializerOptions(PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase)
 
 type Connection = { Token: string; ProjectId: string }
