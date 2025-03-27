@@ -29,7 +29,7 @@ type ResponseEntity(culture: Culture, response: Response) =
     new() =
         ResponseEntity(
             Culture.createDefault (),
-            { Placeholder = Placeholder.create ''' '''
+            { Shield = Shield.create ''' '''
               Items = [] }
         )
 
@@ -37,15 +37,15 @@ type ResponseEntity(culture: Culture, response: Response) =
     member val Items = response.Items |> Seq.map ResponseItemEntity |> Array.ofSeq with get, set
 
 let inline private toPattern (left, right) = $"%c{left}([^%c{right}]*)'"
-let inline private toValuePlaceholder index = $"[%d{index}]"
+let inline private toValue index = $"[%d{index}]"
 
 //TODO: Add support Result type
-let inline private serialize placeholder text =
-    Regex.Matches(text, placeholder |> toPattern)
+let inline private serialize shield text =
+    Regex.Matches(text, shield |> toPattern)
     |> List.ofSeq
     |> List.mapi (fun i x -> i, x.Value)
     |> List.fold
-        (fun (key: string, values) (i, value) -> key.Replace(value, i |> toValuePlaceholder), value :: values)
+        (fun (key: string, values) (i, value) -> key.Replace(value, i |> toValue), value :: values)
         (text, [])
     |> fun (key, values) -> key, values |> List.rev
 
@@ -55,7 +55,7 @@ let inline private deserialize values result =
     |> Option.map (fun result ->
         values
         |> List.mapi (fun i x -> i, x)
-        |> List.fold (fun (result: string) (i, value) -> result.Replace(i |> toValuePlaceholder, value)) result)
+        |> List.fold (fun (result: string) (i, value) -> result.Replace(i |> toValue, value)) result)
 
 module private FileSystem =
     open Persistence.Storages.FileSystem
@@ -74,7 +74,7 @@ module private FileSystem =
                     |> Seq.map (fun requestItem ->
 
                         let requestItemKey, requestItemValues =
-                            requestItem.Value |> serialize request.Placeholder.Values
+                            requestItem.Value |> serialize request.Shield.Values
 
                         match
                             x.Items
@@ -92,7 +92,7 @@ module private FileSystem =
             )
             |> ResultAsync.map (
                 Option.map (fun items ->
-                    { Placeholder = request.Placeholder
+                    { Shield = request.Shield
                       Items = items })
             )
 
@@ -116,10 +116,10 @@ module private FileSystem =
                         |> Seq.fold
                             (fun acc responseItem ->
                                 let responseItemKey =
-                                    responseItem.Value |> (serialize response.Placeholder.Values >> fst)
+                                    responseItem.Value |> (serialize response.Shield.Values >> fst)
 
                                 let responseItemResult =
-                                    responseItem.Result |> Option.map (serialize response.Placeholder.Values >> fst)
+                                    responseItem.Result |> Option.map (serialize response.Shield.Values >> fst)
 
                                 let responseItem =
                                     { Value = responseItemKey

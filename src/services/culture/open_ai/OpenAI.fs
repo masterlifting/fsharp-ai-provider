@@ -11,4 +11,4 @@ let translate (request: Culture.Request) ct =
         |> ResultAsync.wrap (fun prompt ->
             client
             |> Client.Request.Chat.completions prompt ct
-            |> ResultAsync.bind (fun x -> x.ToCulture request.Placeholder))
+            |> ResultAsync.bind (fun x -> x.ToCulture request.Shield))

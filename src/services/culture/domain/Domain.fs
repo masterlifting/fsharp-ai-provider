@@ -3,25 +3,25 @@ module AIProvider.Services.Domain.Culture
 
 open Infrastructure.Domain
 
-type Placeholder =
-    | Placeholder of (char * char)
+type Shield =
+    | Shield of (char * char)
 
     member this.Values =
         match this with
-        | Placeholder(left, right) -> left, right
+        | Shield(left, right) -> left, right
 
-    static member create left right = Placeholder(left, right)
+    static member create left right = Shield(left, right)
 
 type RequestItem = { Value: string }
 
 type Request =
     { Culture: Culture
-      Placeholder: Placeholder
+      Shield: Shield
       Items: RequestItem seq }
 
 type ResponseItem =
     { Value: string; Result: string option }
 
 type Response =
-    { Placeholder: Placeholder
+    { Shield: Shield
       Items: ResponseItem list }

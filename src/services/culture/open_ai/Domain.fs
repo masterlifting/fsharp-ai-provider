@@ -11,7 +11,7 @@ type internal Culture.Request with
         |> Json.serialize
         |> Result.map (fun data ->
 
-            let left, right = this.Placeholder.Values
+            let left, right = this.Shield.Values
 
             let assistant =
                 { OpenAI.Role = "assistant"
@@ -41,7 +41,7 @@ type internal OpenAI.Response with
             this.Messages[0].Content
             |> Json.deserialize<Culture.ResponseItem array>
             |> Result.map (fun items ->
-                { Placeholder = placeholder
+                { Shield = placeholder
                   Items = items |> Array.toList })
         | false ->
             Error
