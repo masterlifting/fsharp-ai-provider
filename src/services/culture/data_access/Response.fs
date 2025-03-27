@@ -44,9 +44,7 @@ let inline private serialize shield text =
     Regex.Matches(text, shield |> toPattern)
     |> List.ofSeq
     |> List.mapi (fun i x -> i, x.Value)
-    |> List.fold
-        (fun (key: string, values) (i, value) -> key.Replace(value, i |> toValue), value :: values)
-        (text, [])
+    |> List.fold (fun (key: string, values) (i, value) -> key.Replace(value, i |> toValue), value :: values) (text, [])
     |> fun (key, values) -> key, values |> List.rev
 
 //TODO: Add support Result type
@@ -156,10 +154,10 @@ module internal Query =
     let get request storage =
         match storage |> toPersistenceStorage with
         | Storage.FileSystem client -> client |> FileSystem.Query.get request
-        | _ -> $"Storage {storage}" |> NotSupported |> Error |> async.Return
+        | _ -> $"The '{storage}'" |> NotSupported |> Error |> async.Return
 
 module internal Command =
     let set culture response storage =
         match storage |> toPersistenceStorage with
         | Storage.FileSystem client -> client |> FileSystem.Command.set culture response
-        | _ -> $"Storage {storage}" |> NotSupported |> Error |> async.Return
+        | _ -> $"The '{storage}'" |> NotSupported |> Error |> async.Return

@@ -46,5 +46,5 @@ type internal OpenAI.Response with
         | false ->
             Error
             <| Operation
-                { Message = $"'{this}' was not recognized as a valid response."
+                { Message = $"The '{this}' was not recognized as a valid response."
                   Code = (__SOURCE_DIRECTORY__, __SOURCE_FILE__, __LINE__) |> Line |> Some }
