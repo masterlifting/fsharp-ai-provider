@@ -42,18 +42,20 @@ let inline private toValuePlaceholder index = $"[%d{index}]"
 //TODO: Add support Result type
 let inline private serialize placeholder text =
     Regex.Matches(text, placeholder |> toPattern)
-    |> Seq.mapi (fun i x -> i, x.Value)
-    |> Seq.fold
+    |> List.ofSeq
+    |> List.mapi (fun i x -> i, x.Value)
+    |> List.fold
         (fun (key: string, values) (i, value) -> key.Replace(value, i |> toValuePlaceholder), value :: values)
         (text, [])
+    |> fun (key, values) -> key, values |> List.rev
 
 //TODO: Add support Result type
 let inline private deserialize values result =
     result
     |> Option.map (fun result ->
         values
-        |> Seq.mapi (fun i x -> i, x)
-        |> Seq.fold (fun (result: string) (i, value) -> result.Replace(i |> toValuePlaceholder, value)) result)
+        |> List.mapi (fun i x -> i, x)
+        |> List.fold (fun (result: string) (i, value) -> result.Replace(i |> toValuePlaceholder, value)) result)
 
 module private FileSystem =
     open Persistence.Storages.FileSystem
