@@ -17,9 +17,10 @@ let init (connection: OpenAI.Connection) =
         let host = "https://api.openai.com"
 
         let headers =
-            Map
-                [ "Authorization", [ $"Bearer {connection.Token}" ]
-                  "OpenAI-Project", [ connection.ProjectId ] ]
+            Map [
+                "Authorization", [ $"Bearer {connection.Token}" ]
+                "OpenAI-Project", [ connection.ProjectId ]
+            ]
             |> Some
 
         { Http.Host = host
