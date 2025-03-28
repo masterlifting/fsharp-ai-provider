@@ -23,8 +23,10 @@ let init (connection: OpenAI.Connection) =
             ]
             |> Some
 
-        { Http.Host = host
-          Http.Headers = headers }
+        {
+            Http.Host = host
+            Http.Headers = headers
+        }
         |> Http.Client.init
         |> Result.map (fun client ->
             clients.TryAdd(connection.Token, client) |> ignore
@@ -35,18 +37,20 @@ module Request =
 
         let completions (request: OpenAI.Request) ct =
             fun client ->
-                let httpRequest: Http.Request =
-                    { Path = "/v1/chat/completions"
-                      Headers = None }
+                let httpRequest: Http.Request = {
+                    Path = "/v1/chat/completions"
+                    Headers = None
+                }
 
                 let httpContent =
                     OpenAI.RequestEntity(request)
                     |> Json.serialize' OpenAI.JsonOptions
                     |> Result.map (fun data ->
-                        Http.RequestContent.String
-                            {| Data = data
-                               Encoding = Text.Encoding.UTF8
-                               MediaType = "application/json" |})
+                        Http.RequestContent.String {|
+                            Data = data
+                            Encoding = Text.Encoding.UTF8
+                            MediaType = "application/json"
+                        |})
 
                 httpContent
                 |> ResultAsync.wrap (fun content ->

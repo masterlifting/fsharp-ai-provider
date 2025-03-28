@@ -30,13 +30,15 @@ let translate request ct =
                     match untranslatedItems.Length with
                     | 0 -> cached |> Ok |> async.Return
                     | _ ->
-                        let request =
-                            { request with
-                                Items = untranslatedItems |> List.map (fun i -> { Value = i.Value }) }
+                        let request = {
+                            request with
+                                Items = untranslatedItems |> List.map (fun i -> { Value = i.Value })
+                        }
 
                         deps
                         |> proceed request ct
-                        |> ResultAsync.map (fun response ->
-                            { response with
-                                Items = response.Items @ translatedItems })
+                        |> ResultAsync.map (fun response -> {
+                            response with
+                                Items = response.Items @ translatedItems
+                        })
         }

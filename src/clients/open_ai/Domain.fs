@@ -22,9 +22,10 @@ type Model =
 
 type Message = { Role: string; Content: string }
 
-type Request =
-    { Model: Model
-      Store: bool
-      Messages: Message list }
+type Request = {
+    Model: Model
+    Store: bool
+    Messages: Message list
+}
 
 type Response = { Messages: Message list }

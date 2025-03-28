@@ -14,14 +14,15 @@ type Shield =
 
 type RequestItem = { Value: string }
 
-type Request =
-    { Culture: Culture
-      Shield: Shield
-      Items: RequestItem seq }
+type Request = {
+    Culture: Culture
+    Shield: Shield
+    Items: RequestItem seq
+}
 
-type ResponseItem =
-    { Value: string; Result: string option }
+type ResponseItem = { Value: string; Result: string option }
 
-type Response =
-    { Shield: Shield
-      Items: ResponseItem list }
+type Response = {
+    Shield: Shield
+    Items: ResponseItem list
+}

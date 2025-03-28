@@ -29,8 +29,10 @@ type ResponseEntity(culture: Culture, response: Response) =
     new() =
         ResponseEntity(
             Culture.createDefault (),
-            { Shield = Shield.create ''' '''
-              Items = [] }
+            {
+                Shield = Shield.create ''' '''
+                Items = []
+            }
         )
 
     member val Culture = culture.Code with get, set
@@ -80,18 +82,21 @@ module private FileSystem =
                             |> Map.ofSeq
                             |> Map.tryFind requestItemKey
                         with
-                        | Some itemEntity ->
-                            { Value = requestItem.Value
-                              Result = itemEntity.Result |> deserialize requestItemValues }
-                        | None ->
-                            { Value = requestItem.Value
-                              Result = None })
+                        | Some itemEntity -> {
+                            Value = requestItem.Value
+                            Result = itemEntity.Result |> deserialize requestItemValues
+                          }
+                        | None -> {
+                            Value = requestItem.Value
+                            Result = None
+                          })
                     |> Seq.toList)
             )
             |> ResultAsync.map (
-                Option.map (fun items ->
-                    { Shield = request.Shield
-                      Items = items })
+                Option.map (fun items -> {
+                    Shield = request.Shield
+                    Items = items
+                })
             )
 
     module Command =
@@ -119,9 +124,10 @@ module private FileSystem =
                                 let responseItemResult =
                                     responseItem.Result |> Option.map (serialize response.Shield.Values >> fst)
 
-                                let responseItem =
-                                    { Value = responseItemKey
-                                      Result = responseItemResult }
+                                let responseItem = {
+                                    Value = responseItemKey
+                                    Result = responseItemResult
+                                }
 
                                 let responseItemEntity = ResponseItemEntity(responseItem)
 
