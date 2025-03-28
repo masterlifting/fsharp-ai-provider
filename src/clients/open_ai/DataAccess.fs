@@ -29,7 +29,6 @@ type RequestEntity(request: Request) =
     member val Store = request.Store with get, set
     member val Messages = request.Messages |> List.map MessageEntity |> List.toArray with get, set
 
-
 type ChoiceEntity() =
     member val Message: MessageEntity = MessageEntity() with get, set
 
