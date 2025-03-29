@@ -160,10 +160,10 @@ module internal Query =
     let get request storage =
         match storage |> toPersistenceStorage with
         | Storage.FileSystem client -> client |> FileSystem.Query.get request
-        | _ -> $"The '{storage}'" |> NotSupported |> Error |> async.Return
+        | _ -> $"The '{storage}' is not supported." |> NotSupported |> Error |> async.Return
 
 module internal Command =
     let set culture response storage =
         match storage |> toPersistenceStorage with
         | Storage.FileSystem client -> client |> FileSystem.Command.set culture response
-        | _ -> $"The '{storage}'" |> NotSupported |> Error |> async.Return
+        | _ -> $"The '{storage}' is not supported." |> NotSupported |> Error |> async.Return
