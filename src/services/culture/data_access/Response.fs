@@ -41,15 +41,25 @@ type ResponseEntity(culture: Culture, response: Response) =
 let inline private toPattern (left, right) = $"%c{left}([^%c{right}]*)'"
 let inline private toValue index = $"[%d{index}]"
 
-//TODO: Add support Result type
 let inline private serialize shield text =
-    Regex.Matches(text, shield |> toPattern)
-    |> List.ofSeq
-    |> List.mapi (fun i x -> i, x.Value)
-    |> List.fold (fun (key: string, values) (i, value) -> key.Replace(value, i |> toValue), value :: values) (text, [])
-    |> fun (key, values) -> key, values |> List.rev
+    try
+        Regex.Matches(text, shield |> toPattern)
+        |> List.ofSeq
+        |> List.mapi (fun i x -> i, x.Value)
+        |> List.fold
+            (fun (key: string, values) (i, value) -> key.Replace(value, i |> toValue), value :: values)
+            (text, [])
+        |> fun (key, values) -> key, values |> List.rev
+        |> Ok
+    with ex ->
+        Error
+        <| Operation {
+            Message =
+                $"Failed to serialize '{text}' with shield '{shield}'. "
+                + (ex |> Exception.toMessage)
+            Code = (__SOURCE_DIRECTORY__, __SOURCE_FILE__, __LINE__) |> Line |> Some
+        }
 
-//TODO: Add support Result type
 let inline private deserialize values result =
     result
     |> Option.map (fun result ->
@@ -72,32 +82,38 @@ module private FileSystem =
                 Option.map (fun x ->
                     request.Items
                     |> Seq.map (fun requestItem ->
-
-                        let requestItemKey, requestItemValues =
-                            requestItem.Value |> serialize request.Shield.Values
-
-                        match
-                            x.Items
-                            |> Seq.map (fun item -> item.Value, item)
-                            |> Map.ofSeq
-                            |> Map.tryFind requestItemKey
-                        with
-                        | Some itemEntity -> {
-                            Value = requestItem.Value
-                            Result = itemEntity.Result |> deserialize requestItemValues
-                          }
-                        | None -> {
-                            Value = requestItem.Value
-                            Result = None
-                          })
-                    |> Seq.toList)
+                        requestItem.Value
+                        |> serialize request.Shield.Values
+                        |> Result.map (fun (requestItemKey, requestItemValues) ->
+                            match
+                                x.Items
+                                |> Seq.map (fun item -> item.Value, item)
+                                |> Map.ofSeq
+                                |> Map.tryFind requestItemKey
+                            with
+                            | Some itemEntity -> {
+                                Value = requestItem.Value
+                                Result = itemEntity.Result |> deserialize requestItemValues
+                              }
+                            | None -> {
+                                Value = requestItem.Value
+                                Result = None
+                              }))
+                    |> Result.choose
+                    |> Result.map (fun items -> {
+                        Shield = request.Shield
+                        Items = items
+                    }))
             )
-            |> ResultAsync.map (
-                Option.map (fun items -> {
-                    Shield = request.Shield
-                    Items = items
-                })
-            )
+            |> Async.bind(function
+                | Error e -> e |>  Error |> async.Return
+                | Ok responseOpt ->
+                    match responseOpt with
+                    | None -> None |> Ok |> async.Return
+                    | Some responseRes ->
+                        match responseRes with
+                        | Error e -> e |> Error |> async.Return
+                        | Ok response -> response |> Some |> Ok |> async.Return)
 
     module Command =
         let set (culture: Culture) (response: Response) client =
