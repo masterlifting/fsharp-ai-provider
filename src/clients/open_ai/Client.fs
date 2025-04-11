@@ -27,7 +27,7 @@ let init (connection: OpenAI.Connection) =
             Http.Host = host
             Http.Headers = headers
         }
-        |> Http.Client.init
+        |> Http.Provider.init
         |> Result.map (fun client ->
             clients.TryAdd(connection.Token, client) |> ignore
             client)
