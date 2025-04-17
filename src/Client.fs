@@ -5,7 +5,6 @@ open AIProvider.Clients
 open AIProvider.Clients.Domain
 
 type Provider = OpenAI of OpenAI.Client
-
 type Connection = OpenAI of OpenAI.Connection
 
 let init connection =

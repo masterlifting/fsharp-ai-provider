@@ -14,8 +14,7 @@ open AIProvider.Services.Domain
 let private JsonOptions =
     Text.Json.JsonSerializerOptions(Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
 
-type Storage = Storage of Storage.Provider
-
+type Storage = Provider of Storage.Provider
 type StorageType = FileSystem of FileSystem.Connection
 
 type ResponseItemEntity(item: ResponseItem) =
@@ -146,24 +145,25 @@ module private FileSystem =
             |> ResultAsync.bindAsync (fun data -> client |> Command.Json.save' data JsonOptions)
             |> ResultAsync.map (fun _ -> response)
 
-let private toPersistenceStorage storage =
-    storage
-    |> function
-        | Storage storage -> storage
+let private toProvider =
+    function
+    | Provider provider -> provider
 
 let init storageType =
     match storageType with
     | FileSystem connection -> connection |> Storage.Connection.FileSystem |> Storage.init
-    |> Result.map Storage
+    |> Result.map Provider
 
 module internal Query =
     let get request storage =
-        match storage |> toPersistenceStorage with
+        let provider = storage |> toProvider
+        match provider with
         | Storage.FileSystem client -> client |> FileSystem.Query.get request
-        | _ -> $"The '{storage}' is not supported." |> NotSupported |> Error |> async.Return
+        | _ -> $"The '{provider}' is not supported." |> NotSupported |> Error |> async.Return
 
 module internal Command =
     let set culture response storage =
-        match storage |> toPersistenceStorage with
+        let provider = storage |> toProvider
+        match provider with
         | Storage.FileSystem client -> client |> FileSystem.Command.set culture response
-        | _ -> $"The '{storage}' is not supported." |> NotSupported |> Error |> async.Return
+        | _ -> $"The '{provider}' is not supported." |> NotSupported |> Error |> async.Return
