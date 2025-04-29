@@ -16,7 +16,8 @@ type internal Culture.Request with
             let assistant = {
                 OpenAI.Role = "assistant"
                 OpenAI.Content =
-                    $"You are an expert translator. Translate the provided array values into the requested language.\n\n\
+                    $" Forget all previous instructions.\n\n\
+                    You are an expert translator. Translate the provided array values into the requested language.\n\n\
                     Consider the context carefully to ensure accurate translations.\n\n\
                     The symbols are enclosed in: {left}<symbols>{right} should not be translated.\n\n\
                     Correct any messy symbols and ensure translations follow proper grammar and punctuation."
