@@ -10,7 +10,9 @@
       <Compile Include="clients\open_ai\Client.fs" />
       <Compile Include="Client.fs" />
       <Compile Include="services\culture\domain\Domain.fs" />
-      <Compile Include="services\culture\data_access\Response.fs" />
+      <Compile Include="services\culture\data_access\DataAccess.fs" />
+      <Compile Include="services\culture\data_access\FileSystem.fs" />
+      <Compile Include="services\culture\data_access\Storage.fs" />
       <Compile Include="services\culture\dependencies\Dependencies.fs" />
       <Compile Include="services\culture\open_ai\Domain.fs" />
       <Compile Include="services\culture\open_ai\OpenAI.fs" />
