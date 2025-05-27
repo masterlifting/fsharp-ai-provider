@@ -3,6 +3,7 @@ module AIProvider.Services.DataAccess.Culture.Response
 
 open System
 open System.Text.RegularExpressions
+open Infrastructure.SerDe
 open Infrastructure.Domain
 open Infrastructure.Prelude
 open Persistence
@@ -62,6 +63,9 @@ module private FileSystem =
     let private loadData = Query.Json.get<ResponseEntity>
 
     module Query =
+
+        let loadDataSet client =
+            client |> loadData |> ResultAsync.bind (Json.serialize' JsonOptions)
 
         let get (request: Request) client =
             client
@@ -153,6 +157,12 @@ let init storageType =
     match storageType with
     | FileSystem connection -> connection |> Storage.Connection.FileSystem |> Storage.init
     |> Result.map Provider
+
+let loadDataSet storage =
+    let provider = storage |> toProvider
+    match provider with
+    | Storage.FileSystem client -> client |> FileSystem.Query.loadDataSet
+    | _ -> $"The '{provider}' is not supported." |> NotSupported |> Error |> async.Return
 
 module internal Query =
     let get request storage =

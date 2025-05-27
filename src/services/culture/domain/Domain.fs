@@ -20,6 +20,8 @@ type Request = {
     Items: RequestItem seq
 }
 
+type DataSet = { Value: string }
+
 type ResponseItem = { Value: string; Result: string option }
 
 type Response = {

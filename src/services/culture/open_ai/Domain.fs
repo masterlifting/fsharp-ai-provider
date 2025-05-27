@@ -5,6 +5,26 @@ open Infrastructure.SerDe
 open AIProvider.Clients.Domain
 open AIProvider.Services.Domain
 
+type internal Culture.DataSet with
+    member this.ToPrompt() =
+
+        let assistant = {
+            OpenAI.Role = "assistant"
+            OpenAI.Content = $"To provide a good result use the following json data as a template: {this.Value}"
+        }
+
+        let user = {
+            OpenAI.Role = "user"
+            OpenAI.Content =
+                $"I dont need a result. Just use the following json data as a template to create future translations."
+        }
+
+        {
+            OpenAI.Model = OpenAI.Model.Gpt3_5Turbo
+            OpenAI.Store = false
+            OpenAI.Messages = [ assistant; user ]
+        }
+
 type internal Culture.Request with
     member this.ToPrompt() =
         this.Items

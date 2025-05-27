@@ -7,7 +7,12 @@ open AIProvider.Services.Domain
 open AIProvider.Services.DataAccess.Culture
 open AIProvider.Services.Dependencies
 
-let private proceed request ct =
+let initDataSet dataSet ct =
+    fun provider ->
+        match provider with
+        | AIProvider.Client.Provider.OpenAI client -> client |> OpenAI.Culture.initDataSet dataSet ct
+
+let private requestTranslation request ct =
     fun (deps: Culture.Dependencies) ->
         match deps.Provider with
         | AIProvider.Client.Provider.OpenAI client -> client |> OpenAI.Culture.translate request ct
@@ -22,7 +27,7 @@ let translate request ct =
 
             return
                 match cache with
-                | None -> deps |> proceed request ct
+                | None -> deps |> requestTranslation request ct
                 | Some cached ->
                     let untranslatedItems, translatedItems =
                         cached.Items |> List.partition _.Result.IsNone
@@ -36,7 +41,7 @@ let translate request ct =
                         }
 
                         deps
-                        |> proceed request ct
+                        |> requestTranslation request ct
                         |> ResultAsync.map (fun response -> {
                             response with
                                 Items = response.Items @ translatedItems
