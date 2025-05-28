@@ -12,11 +12,10 @@ let setContext ct =
         storage
         |> Storage.Culture.Query.loadData
         |> ResultAsync.bindAsync (function
-            | [||] ->
-                // No existing translations, nothing to set as context
-                Ok() |> async.Return
+            | [||] -> Ok() |> async.Return
             | dataSet ->
                 dataSet
+                |> Array.collect (fun x -> x.Items |> Array.truncate 30)
                 |> Json.serialize
                 |> ResultAsync.wrap (fun data ->
                     let context = { Data = data }
