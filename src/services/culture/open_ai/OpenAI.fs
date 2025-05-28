@@ -12,12 +12,15 @@ let setContext ct =
         storage
         |> Storage.Culture.Query.loadData
         |> ResultAsync.bindAsync (function
-            | [||] -> Ok() |> async.Return
+            | [||] ->
+                // No existing translations, nothing to set as context
+                Ok() |> async.Return
             | dataSet ->
                 dataSet
                 |> Json.serialize
-                |> ResultAsync.wrap (fun str ->
-                    let prompt = { Value = str }.ToPrompt()
+                |> ResultAsync.wrap (fun data ->
+                    let context = { Data = data }
+                    let prompt = context.ToPrompt()
                     client |> Client.Request.Chat.completions prompt ct |> ResultAsync.map ignore))
 
 let translate (request: Culture.Request) ct =
