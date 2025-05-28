@@ -18,18 +18,18 @@ let init storageType =
     match storageType with
     | FileSystem connection -> connection |> Storage.Connection.FileSystem |> Storage.init
     |> Result.map Culture.Provider
-    
+
 module internal Query =
     let get request storage =
         let provider = storage |> toProvider
         match provider with
         | Storage.FileSystem client -> client |> FileSystem.Culture.Query.get request
         | _ -> $"The '{provider}' is not supported." |> NotSupported |> Error |> async.Return
-        
-    let getContext storage =
+
+    let loadData storage =
         let provider = storage |> toProvider
         match provider with
-        | Storage.FileSystem client -> client |> FileSystem.Culture.Query.getContext
+        | Storage.FileSystem client -> client |> FileSystem.Culture.Query.loadData
         | _ -> $"The '{provider}' is not supported." |> NotSupported |> Error |> async.Return
 
 module internal Command =

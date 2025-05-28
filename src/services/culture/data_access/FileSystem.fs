@@ -50,7 +50,7 @@ module Query =
             })
         )
 
-    let getContext client = client |> loadData
+    let loadData client = client |> loadData
 
 module Command =
     let set (culture: Culture) (response: Response) client =

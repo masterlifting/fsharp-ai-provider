@@ -1,17 +1,24 @@
 module AIProvider.Services.OpenAI.Culture
 
+open Infrastructure.SerDe
 open Infrastructure.Prelude
 open AIProvider.Clients.OpenAI
 open AIProvider.Services.Domain
+open AIProvider.Services.DataAccess
 open AIProvider.Services.Domain.OpenAI
 
-let initDataSet (dataSet: string option) ct =
-    fun client ->
-        match dataSet with
-        | None -> Ok() |> async.Return
-        | Some dataSet ->
-            let prompt = { Value = dataSet }.ToPrompt()
-            client |> Client.Request.Chat.completions prompt ct |> ResultAsync.map ignore
+let setContext ct =
+    fun (client, storage) ->
+        storage
+        |> Storage.Culture.Query.loadData
+        |> ResultAsync.bindAsync (function
+            | [||] -> Ok() |> async.Return
+            | dataSet ->
+                dataSet
+                |> Json.serialize
+                |> ResultAsync.wrap (fun str ->
+                    let prompt = { Value = str }.ToPrompt()
+                    client |> Client.Request.Chat.completions prompt ct |> ResultAsync.map ignore))
 
 let translate (request: Culture.Request) ct =
     fun client ->

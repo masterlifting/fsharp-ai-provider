@@ -4,30 +4,31 @@ module AIProvider.Services.Culture
 open Infrastructure.Domain
 open Infrastructure.Prelude
 open AIProvider.Services.Domain
-open AIProvider.Services.DataAccess.Culture
+open AIProvider.Services.DataAccess
 open AIProvider.Services.Dependencies
 
-let initDataSet dataSet ct =
-    fun provider ->
-        match provider with
-        | AIProvider.Client.Provider.OpenAI client -> client |> OpenAI.Culture.initDataSet dataSet ct
-
-let private requestTranslation request ct =
+let private resultAsync = ResultAsyncBuilder()
+let setContext ct =
     fun (deps: Culture.Dependencies) ->
         match deps.Provider with
-        | AIProvider.Client.Provider.OpenAI client -> client |> OpenAI.Culture.translate request ct
-        |> ResultAsync.bindAsync (fun response -> deps.Storage |> Response.Command.set request.Culture response)
+        | AIProvider.Client.Provider.OpenAI client -> (client, deps.Storage) |> OpenAI.Culture.setContext ct
 
 let translate request ct =
     fun (deps: Culture.Dependencies) ->
-        let resultAsync = ResultAsyncBuilder()
+
+        let inline perform request ct =
+            fun (deps: Culture.Dependencies) ->
+                match deps.Provider with
+                | AIProvider.Client.Provider.OpenAI client -> client |> OpenAI.Culture.translate request ct
+                |> ResultAsync.bindAsync (fun response ->
+                    deps.Storage |> Storage.Culture.Command.set request.Culture response)
 
         resultAsync {
-            let! cache = deps.Storage |> Response.Query.get request
+            let! cache = deps.Storage |> Storage.Culture.Query.get request
 
             return
                 match cache with
-                | None -> deps |> requestTranslation request ct
+                | None -> deps |> perform request ct
                 | Some cached ->
                     let untranslatedItems, translatedItems =
                         cached.Items |> List.partition _.Result.IsNone
@@ -41,7 +42,7 @@ let translate request ct =
                         }
 
                         deps
-                        |> requestTranslation request ct
+                        |> perform request ct
                         |> ResultAsync.map (fun response -> {
                             response with
                                 Items = response.Items @ translatedItems
