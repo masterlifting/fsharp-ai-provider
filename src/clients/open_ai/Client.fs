@@ -24,7 +24,7 @@ let init (connection: OpenAI.Connection) =
             |> Some
 
         {
-            Http.Host = host
+            Http.BaseUrl = host
             Http.Headers = headers
         }
         |> Http.Client.init
@@ -46,10 +46,10 @@ module Request =
                     OpenAI.RequestEntity(request)
                     |> Json.serialize' OpenAI.JsonOptions
                     |> Result.map (fun data ->
-                        Http.RequestContent.String {|
+                        Http.Content.String {|
                             Data = data
                             Encoding = Text.Encoding.UTF8
-                            MediaType = "application/json"
+                            ContentType = "application/json"
                         |})
 
                 httpContent
