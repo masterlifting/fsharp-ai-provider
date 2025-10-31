@@ -8,7 +8,9 @@ open Persistence.Storages.Domain
 open AIProvider.Services.Domain
 open AIProvider.Services.DataAccess
 
-type StorageType = FileSystem of FileSystem.Connection
+type StorageType =
+    | FileSystem of FileSystem.Connection
+    | Postgre of Postgre.Connection
 
 let private toProvider =
     function
