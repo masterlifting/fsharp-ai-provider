@@ -12,6 +12,7 @@
       <Compile Include="services\culture\domain\Domain.fs" />
       <Compile Include="services\culture\data_access\DataAccess.fs" />
       <Compile Include="services\culture\data_access\FileSystem.fs" />
+      <Compile Include="services\culture\data_access\Postgre.fs" />
       <Compile Include="services\culture\data_access\Storage.fs" />
       <Compile Include="services\culture\dependencies\Dependencies.fs" />
       <Compile Include="services\culture\open_ai\Domain.fs" />
