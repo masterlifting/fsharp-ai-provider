@@ -10,97 +10,52 @@ open AIProvider.Services.DataAccess
 
 module Query =
 
-    let get (request: Request) (client: Client) =
-        async {
-            let sql = {
-                Sql =
-                    """
-                        SELECT culture, items
-                        FROM cultures
-                        WHERE culture = @Culture
-                    """
-                Params = Some {| Culture = request.Culture.Code |}
-            }
-
-            let! result =
-                client
-                |> Persistence.Storages.Postgre.Query.get<{| Culture: string; Items: string |}> sql
-                |> ResultAsync.map Seq.tryHead
-
-            return
-                result
-                |> Result.bind (fun rowOption ->
-                    match rowOption with
-                    | None -> Ok None
-                    | Some row ->
-                        try
-                            let deserializedItems =
-                                JsonSerializer.Deserialize<Culture.ResponseItemEntity[]>(row.Items)
-                            match deserializedItems with
-                            | null ->
-                                Error(
-                                    Infrastructure.Domain.Error.Operation {
-                                        Message = "Failed to deserialize culture data: null result"
-                                        Code = None
-                                    }
-                                )
-                            | items ->
-                                let responseItems =
-                                    items
-                                    |> Array.map (fun entity -> {
-                                        Value = entity.Value
-                                        Result = entity.Result
-                                    })
-                                    |> Array.toList
-
-                                let responseEntity =
-                                    Culture.ResponseEntity(
-                                        request.Culture,
-                                        {
-                                            Shield = request.Shield
-                                            Items = responseItems
-                                        }
-                                    )
-
-                                Ok(Some responseEntity)
-                        with ex ->
-                            Error(
-                                Infrastructure.Domain.Error.Operation {
-                                    Message = $"Failed to deserialize culture data: {ex.Message}"
-                                    Code = None
-                                }
-                            ))
-                |> Result.map (
-                    Option.map (fun x ->
-                        request.Items
-                        |> Seq.map (fun requestItem ->
-
-                            let requestItemKey, requestItemValues =
-                                requestItem.Value |> Culture.serialize request.Shield.Values
-
-                            match
-                                x.Items
-                                |> Seq.map (fun item -> item.Value, item)
-                                |> Map.ofSeq
-                                |> Map.tryFind requestItemKey
-                            with
-                            | Some itemEntity -> {
-                                Value = requestItem.Value
-                                Result = itemEntity.Result |> Culture.deserialize requestItemValues
-                              }
-                            | None -> {
-                                Value = requestItem.Value
-                                Result = None
-                              })
-                        |> Seq.toList)
-                )
-                |> Result.map (
-                    Option.map (fun items -> {
-                        Shield = request.Shield
-                        Items = items
-                    })
-                )
+    let private loadData code client =
+        let sql = {
+            Sql =
+                """
+                    SELECT culture, items
+                    FROM cultures
+                    WHERE culture = @Culture
+                """
+            Params = Some {| Culture = code |}
         }
+
+        client |> Query.get<Culture.ResponseEntity> sql |> ResultAsync.map Seq.tryHead
+
+    let get (request: Request) (client: Client) =
+        client
+        |> loadData request.Culture.Code
+        |> ResultAsync.map (
+            Option.map (fun x ->
+                request.Items
+                |> Seq.map (fun requestItem ->
+
+                    let requestItemKey, requestItemValues =
+                        requestItem.Value |> Culture.serialize request.Shield.Values
+
+                    match
+                        x.Items
+                        |> Seq.map (fun item -> item.Value, item)
+                        |> Map.ofSeq
+                        |> Map.tryFind requestItemKey
+                    with
+                    | Some itemEntity -> {
+                        Value = requestItem.Value
+                        Result = itemEntity.Result |> Culture.deserialize requestItemValues
+                      }
+                    | None -> {
+                        Value = requestItem.Value
+                        Result = None
+                      })
+                |> Seq.toList)
+        )
+        |> ResultAsync.map (
+            Option.map (fun items -> {
+                Shield = request.Shield
+                Items = items
+            })
+        )
 
     let loadData (client: Client) =
         client

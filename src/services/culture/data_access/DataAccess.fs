@@ -10,7 +10,7 @@ open AIProvider.Services.Domain
 type Storage = Provider of Storage.Provider
 
 type ResponseItemEntity(item: ResponseItem) =
-    new() = ResponseItemEntity({ Value = String.Empty; Result = None })
+    new() = ResponseItemEntity { Value = String.Empty; Result = None }
 
     member val Value = item.Value with get, set
     member val Result = item.Result with get, set

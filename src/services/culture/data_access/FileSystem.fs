@@ -11,9 +11,8 @@ open AIProvider.Services.DataAccess
 let private JsonOptions =
     Text.Json.JsonSerializerOptions(Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
 
-let private loadData = Query.Json.get<Culture.ResponseEntity>
-
 module Query =
+    let private loadData = Query.Json.get<Culture.ResponseEntity>
 
     let get (request: Request) client =
         client
