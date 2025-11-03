@@ -2,6 +2,7 @@ module AIProvider.Services.DataAccess.Postgre.Culture
 
 open Infrastructure.Domain
 open Infrastructure.Prelude
+open System.Text.Json
 open Persistence.Storages.Postgre
 open Persistence.Storages.Domain.Postgre
 open AIProvider.Services.Domain
@@ -21,10 +22,54 @@ module Query =
                 Params = Some {| Culture = request.Culture.Code |}
             }
 
-            let! result = client |> Query.get<Culture.ResponseEntity> sql |> ResultAsync.map Seq.tryHead
+            let! result =
+                client
+                |> Persistence.Storages.Postgre.Query.get<{| Culture: string; Items: string |}> sql
+                |> ResultAsync.map Seq.tryHead
 
             return
                 result
+                |> Result.bind (fun rowOption ->
+                    match rowOption with
+                    | None -> Ok None
+                    | Some row ->
+                        try
+                            let deserializedItems =
+                                JsonSerializer.Deserialize<Culture.ResponseItemEntity[]>(row.Items)
+                            match deserializedItems with
+                            | null ->
+                                Error(
+                                    Infrastructure.Domain.Error.Operation {
+                                        Message = "Failed to deserialize culture data: null result"
+                                        Code = None
+                                    }
+                                )
+                            | items ->
+                                let responseItems =
+                                    items
+                                    |> Array.map (fun entity -> {
+                                        Value = entity.Value
+                                        Result = entity.Result
+                                    })
+                                    |> Array.toList
+
+                                let responseEntity =
+                                    Culture.ResponseEntity(
+                                        request.Culture,
+                                        {
+                                            Shield = request.Shield
+                                            Items = responseItems
+                                        }
+                                    )
+
+                                Ok(Some responseEntity)
+                        with ex ->
+                            Error(
+                                Infrastructure.Domain.Error.Operation {
+                                    Message = $"Failed to deserialize culture data: {ex.Message}"
+                                    Code = None
+                                }
+                            ))
                 |> Result.map (
                     Option.map (fun x ->
                         request.Items
@@ -59,10 +104,50 @@ module Query =
 
     let loadData (client: Client) =
         client
-        |> Query.get<Culture.ResponseEntity> {
+        |> Persistence.Storages.Postgre.Query.get<{| Culture: string; Items: string |}> {
             Sql = "SELECT culture, items FROM cultures"
             Params = None
         }
+        |> ResultAsync.map (
+            Seq.map (fun row ->
+                try
+                    let deserializedItems =
+                        JsonSerializer.Deserialize<Culture.ResponseItemEntity[]>(row.Items)
+                    match deserializedItems with
+                    | null ->
+                        Culture.ResponseEntity(
+                            Culture.parse row.Culture,
+                            {
+                                Shield = Shield.create ''' '''
+                                Items = []
+                            }
+                        )
+                    | items ->
+                        let responseItems =
+                            items
+                            |> Array.map (fun entity -> {
+                                Value = entity.Value
+                                Result = entity.Result
+                            })
+                            |> Array.toList
+
+                        Culture.ResponseEntity(
+                            Culture.parse row.Culture,
+                            {
+                                Shield = Shield.create ''' '''
+                                Items = responseItems
+                            }
+                        )
+                with ex ->
+                    Culture.ResponseEntity(
+                        Culture.parse row.Culture,
+                        {
+                            Shield = Shield.create ''' '''
+                            Items = []
+                        }
+                    ))
+        )
+        |> ResultAsync.map Seq.toArray
 
 module Command =
 
@@ -71,70 +156,80 @@ module Command =
             // Load existing data
             let! existingResult =
                 client
-                |> Persistence.Storages.Postgre.Query.get<Culture.ResponseEntity> {
+                |> Persistence.Storages.Postgre.Query.get<{| Culture: string; Items: string |}> {
                     Sql = "SELECT culture, items FROM cultures"
                     Params = None
                 }
+                |> ResultAsync.map (
+                    Seq.map (fun row ->
+                        try
+                            let deserializedItems =
+                                JsonSerializer.Deserialize<Culture.ResponseItemEntity[]>(row.Items)
+                            match deserializedItems with
+                            | null ->
+                                Culture.ResponseEntity(
+                                    Culture.parse row.Culture,
+                                    { Shield = response.Shield; Items = [] }
+                                )
+                            | items ->
+                                let responseItems =
+                                    items
+                                    |> Array.map (fun entity -> {
+                                        Value = entity.Value
+                                        Result = entity.Result
+                                    })
+                                    |> Array.toList
+
+                                Culture.ResponseEntity(
+                                    Culture.parse row.Culture,
+                                    {
+                                        Shield = response.Shield
+                                        Items = responseItems
+                                    }
+                                )
+                        with ex ->
+                            Culture.ResponseEntity(Culture.parse row.Culture, { Shield = response.Shield; Items = [] }))
+                )
 
             match existingResult with
             | Error err -> return Error err
             | Ok data ->
+                let dataArray = data |> Seq.toArray
                 let updatedData =
-                    match data |> Seq.tryFindIndex (fun x -> x.Culture = culture.Code) with
-                    | None -> data |> Array.append [| Culture.ResponseEntity(culture, response) |]
+                    match dataArray |> Array.tryFindIndex (fun x -> x.Culture = culture.Code) with
+                    | None -> dataArray |> Array.append [| Culture.ResponseEntity(culture, response) |]
                     | Some rIndex ->
-                        let responseEntity = data[rIndex]
-
-                        let responseEntityItemsMap =
-                            responseEntity.Items |> Seq.mapi (fun i item -> item.Value, i) |> Map.ofSeq
-
-                        let updatedResponseItemEntities = Array.copy responseEntity.Items
-
-                        let newResponseItemEntities =
-                            response.Items
-                            |> Seq.fold
-                                (fun acc responseItem ->
-                                    let responseItemKey =
-                                        responseItem.Value |> (Culture.serialize response.Shield.Values >> fst)
-
-                                    let responseItemResult =
-                                        responseItem.Result
-                                        |> Option.map (Culture.serialize response.Shield.Values >> fst)
-
-                                    let responseItem = {
-                                        Value = responseItemKey
-                                        Result = responseItemResult
-                                    }
-
-                                    let responseItemEntity = Culture.ResponseItemEntity(responseItem)
-
-                                    match responseEntityItemsMap |> Map.tryFind responseItemKey with
-                                    | Some riIndex ->
-                                        updatedResponseItemEntities[riIndex] <- responseItemEntity
-                                        acc
-                                    | None -> responseItemEntity :: acc)
-                                []
-                            |> List.rev
-                            |> Array.ofList
-
-                        responseEntity.Items <- updatedResponseItemEntities |> Array.append newResponseItemEntities
-
-                        data
+                        // Replace the entire response for this culture
+                        dataArray[rIndex] <- Culture.ResponseEntity(culture, response)
+                        dataArray
 
                 // Now save the updated data by upserting each entity
                 let! saveResult =
                     updatedData
                     |> Seq.map (fun entity ->
-                        client
-                        |> Command.execute {
-                            Sql =
-                                """
-                                    INSERT INTO cultures (culture, items)
-                                    VALUES (@Culture, @Items::jsonb)
-                                    ON CONFLICT (culture) DO UPDATE SET
-                                        items = EXCLUDED.items
-                                """
-                            Params = Some entity
+                        async {
+                            let itemsJson =
+                                try
+                                    JsonSerializer.Serialize(entity.Items)
+                                with ex ->
+                                    "[]"
+
+                            return!
+                                client
+                                |> Command.execute {
+                                    Sql =
+                                        """
+                                            INSERT INTO cultures (culture, items)
+                                            VALUES (@Culture, @Items::jsonb)
+                                            ON CONFLICT (culture) DO UPDATE SET
+                                                items = EXCLUDED.items
+                                        """
+                                    Params =
+                                        Some {|
+                                            Culture = entity.Culture
+                                            Items = itemsJson
+                                        |}
+                                }
                         })
                     |> Async.Sequential
                     |> Async.map (Array.toList >> Result.choose)
