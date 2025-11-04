@@ -7,12 +7,9 @@ open Persistence.Storages.FileSystem
 open AIProvider.Services.Domain
 open AIProvider.Services.DataAccess
 
-// Use UTF-8 encoding for proper Cyrillic support
-let private JsonOptions =
-    Text.Json.JsonSerializerOptions(Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
+let private loadData = Query.Json.get<Culture.ResponseEntity>
 
 module Query =
-    let private loadData = Query.Json.get<Culture.ResponseEntity>
 
     let get (request: Request) client =
         client
@@ -52,6 +49,10 @@ module Query =
     let loadData client = client |> loadData
 
 module Command =
+    // Use UTF-8 encoding for proper Cyrillic support
+    let private JsonOptions =
+        Text.Json.JsonSerializerOptions(Encoder = Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
+
     let set (culture: Culture) (response: Response) client =
         client
         |> loadData
