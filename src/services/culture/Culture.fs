@@ -24,27 +24,45 @@ let translate request ct =
                     deps.Storage |> Storage.Culture.Command.set request.Culture response)
 
         resultAsync {
-            let! cache = deps.Storage |> Storage.Culture.Query.get request
 
-            return
-                match cache with
-                | None -> deps |> perform request ct
-                | Some cached ->
-                    let untranslatedItems, translatedItems =
-                        cached.Items |> List.partition _.Result.IsNone
+            match request.Culture with
+            | Culture.English ->
+                return
+                    {
+                        Shield = request.Shield
+                        Items =
+                            request.Items
+                            |> Seq.map (fun i -> {
+                                Value = i.Value
+                                Result = Some i.Value
+                            })
+                            |> Seq.toList
+                    }
+                    |> Ok
+                    |> async.Return
+            | _ ->
 
-                    match untranslatedItems.Length with
-                    | 0 -> cached |> Ok |> async.Return
-                    | _ ->
-                        let request = {
-                            request with
-                                Items = untranslatedItems |> List.map (fun i -> { Value = i.Value })
-                        }
+                let! cache = deps.Storage |> Storage.Culture.Query.get request
 
-                        deps
-                        |> perform request ct
-                        |> ResultAsync.map (fun response -> {
-                            response with
-                                Items = response.Items @ translatedItems
-                        })
+                return
+                    match cache with
+                    | None -> deps |> perform request ct
+                    | Some cached ->
+                        let untranslatedItems, translatedItems =
+                            cached.Items |> List.partition _.Result.IsNone
+
+                        match untranslatedItems.Length with
+                        | 0 -> cached |> Ok |> async.Return
+                        | _ ->
+                            let request = {
+                                request with
+                                    Items = untranslatedItems |> List.map (fun i -> { Value = i.Value })
+                            }
+
+                            deps
+                            |> perform request ct
+                            |> ResultAsync.map (fun response -> {
+                                response with
+                                    Items = response.Items @ translatedItems
+                            })
         }
