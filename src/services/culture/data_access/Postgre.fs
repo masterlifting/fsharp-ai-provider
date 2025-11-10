@@ -26,18 +26,20 @@ type private PostgreResponse() =
 module Query =
 
     let get (request: Request) (client: Client) =
-        let sql = {
+        let sqlRequest = {
             Sql =
                 """
-                    SELECT culture, items::text as items
-                    FROM cultures
-                    WHERE culture = @Culture
-                """
+                SELECT 
+                    culture as "Culture", 
+                    items::text as "Items"
+                FROM cultures
+                WHERE culture = @Culture
+            """
             Params = Some {| Culture = request.Culture.Code |}
         }
 
         client
-        |> Query.get<PostgreResponse> sql
+        |> Query.get<PostgreResponse> sqlRequest
         |> ResultAsync.map Seq.tryHead
         |> ResultAsync.bind (function
             | Some response -> response.map () |> Result.map Some
@@ -76,7 +78,13 @@ module Query =
     let loadData (client: Client) =
         client
         |> Query.get<PostgreResponse> {
-            Sql = "SELECT culture, items::text as items FROM cultures"
+            Sql =
+                """
+                SELECT 
+                    culture as "Culture", 
+                    items::text as "Items" 
+                FROM cultures
+            """
             Params = None
         }
         |> ResultAsync.bind (Seq.map _.map() >> Result.choose)
@@ -124,18 +132,20 @@ module Command =
         Array.append updatedResponseItemEntities newResponseItemEntities
 
     let set (culture: Culture) (response: Response) (client: Client) =
-        let sql = {
+        let request = {
             Sql =
                 """
-                    SELECT culture, items::text as items
-                    FROM cultures
-                    WHERE culture = @Culture
-                """
+                SELECT 
+                    culture as "Culture", 
+                    items::text as "Items"
+                FROM cultures
+                WHERE culture = @Culture
+            """
             Params = Some {| Culture = culture.Code |}
         }
 
         client
-        |> Postgre.Query.get<PostgreResponse> sql
+        |> Postgre.Query.get<PostgreResponse> request
         |> ResultAsync.map Seq.tryHead
         |> ResultAsync.bind (function
             | Some response -> response.map () |> Result.map Some
@@ -169,11 +179,11 @@ module Migrations =
             let migration = {
                 Sql =
                     """
-                        CREATE TABLE IF NOT EXISTS cultures (
-                            culture TEXT PRIMARY KEY,
-                            items JSONB NOT NULL
-                        )
-                    """
+                    CREATE TABLE IF NOT EXISTS cultures (
+                        culture TEXT PRIMARY KEY,
+                        items JSONB NOT NULL
+                    )
+                """
                 Params = None
             }
 
