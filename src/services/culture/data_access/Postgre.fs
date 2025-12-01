@@ -202,4 +202,4 @@ module Migrations =
             Lifetime = Persistence.Domain.Transient
         }
         |> Provider.init
-        |> ResultAsync.wrap (fun client -> client |> initial |> ResultAsync.apply (client |> clean))
+        |> ResultAsync.wrap (fun client -> client |> initial |> ResultAsync.applyAsync (client |> clean))
