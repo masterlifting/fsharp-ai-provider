@@ -173,6 +173,7 @@ module Command =
         |> ResultAsync.map (fun _ -> response)
 
 module Migrations =
+    let private resultAsync = ResultAsyncBuilder()
 
     let private initial (client: Client) =
         async {
@@ -190,16 +191,15 @@ module Migrations =
             return! client |> Command.execute migration |> ResultAsync.map ignore
         }
 
-    let private clean (client: Client) =
-        async {
-            client |> Provider.dispose
-            return Ok()
-        }
-
     let apply (connectionString: string) =
-        {
-            String = connectionString
-            Lifetime = Persistence.Domain.Transient
+        resultAsync {
+            let! client =
+                Provider.init {
+                    String = connectionString
+                    Lifetime = Persistence.Domain.Transient
+                }
+                |> async.Return
+
+            do! client |> initial
+            return client |> Provider.dispose |> Ok |> async.Return
         }
-        |> Provider.init
-        |> ResultAsync.wrap (fun client -> client |> initial |> ResultAsync.applyAsync (client |> clean))
