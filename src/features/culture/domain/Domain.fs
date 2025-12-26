@@ -1,5 +1,5 @@
 ﻿[<AutoOpen>]
-module AIProvider.Services.Domain.Culture
+module AIProvider.Features.Domain.Culture
 
 open Infrastructure.Domain
 

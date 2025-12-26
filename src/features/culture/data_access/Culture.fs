@@ -1,11 +1,11 @@
-﻿module AIProvider.Services.DataAccess.Culture
+﻿module AIProvider.Features.DataAccess.Culture
 
 open System
 open System.Text.RegularExpressions
 open Infrastructure.Domain
 open Persistence
 
-open AIProvider.Services.Domain
+open AIProvider.Features.Domain
 
 type Storage = Provider of Storage.Provider
 

@@ -1,9 +1,9 @@
 ﻿[<RequireQualifiedAccess>]
-module AIProvider.Services.Dependencies.Culture
+module AIProvider.Features.Dependencies.Culture
 
 open Infrastructure.Domain
-open AIProvider.Services.Domain
-open AIProvider.Services.DataAccess
+open AIProvider.Features.Domain
+open AIProvider.Features.DataAccess
 
 type Dependencies = {
     Provider: AIProvider.Client.Provider

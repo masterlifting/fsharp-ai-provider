@@ -1,9 +1,9 @@
-module internal AIProvider.Services.Domain.OpenAI
+module internal AIProvider.Features.Providers.Domain.OpenAI
 
 open Infrastructure.Domain
 open Infrastructure.SerDe
 open AIProvider.Clients.Domain
-open AIProvider.Services.Domain
+open AIProvider.Features.Domain
 
 type internal Culture.Context with
     member this.ToPrompt() =

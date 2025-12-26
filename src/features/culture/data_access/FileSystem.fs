@@ -1,11 +1,11 @@
-﻿module internal AIProvider.Services.DataAccess.FileSystem.Culture
+﻿module internal AIProvider.Features.DataAccess.FileSystem.Culture
 
 open System
 open Infrastructure.Domain
 open Infrastructure.Prelude
 open Persistence.Storages.FileSystem
-open AIProvider.Services.Domain
-open AIProvider.Services.DataAccess
+open AIProvider.Features.Domain
+open AIProvider.Features.DataAccess
 
 let private loadData = Query.Json.get<Culture.ResponseEntity>
 

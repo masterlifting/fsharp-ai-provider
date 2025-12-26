@@ -1,12 +1,12 @@
 ﻿[<RequireQualifiedAccess>]
-module AIProvider.Services.DataAccess.Storage.Culture
+module AIProvider.Features.DataAccess.Storage.Culture
 
 open Infrastructure.Domain
 open Persistence
 open Persistence.Storages
 open Persistence.Storages.Domain
-open AIProvider.Services.Domain
-open AIProvider.Services.DataAccess
+open AIProvider.Features.Domain
+open AIProvider.Features.DataAccess
 
 type StorageType =
     | FileSystem of FileSystem.Connection

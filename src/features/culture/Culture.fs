@@ -1,11 +1,12 @@
 [<RequireQualifiedAccess>]
-module AIProvider.Services.Culture
+module AIProvider.Features.Culture
 
 open Infrastructure.Domain
 open Infrastructure.Prelude
-open AIProvider.Services.Domain
-open AIProvider.Services.DataAccess
-open AIProvider.Services.Dependencies
+open AIProvider.Features.Domain
+open AIProvider.Features.DataAccess
+open AIProvider.Features.Dependencies
+open AIProvider.Features.Providers
 
 let private resultAsync = ResultAsyncBuilder()
 let setContext ct =

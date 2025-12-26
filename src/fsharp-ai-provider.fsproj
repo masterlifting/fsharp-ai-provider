@@ -1,27 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <OutputType>Library</OutputType>
-        <TargetFramework>net10.0</TargetFramework>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-    <ItemGroup>
-      <Compile Include="clients\open_ai\Domain.fs" />
-      <Compile Include="clients\open_ai\DataAccess.fs" />
-      <Compile Include="clients\open_ai\Client.fs" />
-      <Compile Include="Client.fs" />
-      <Compile Include="services\culture\domain\Domain.fs" />
-      <Compile Include="services\culture\data_access\DataAccess.fs" />
-      <Compile Include="services\culture\data_access\FileSystem.fs" />
-      <Compile Include="services\culture\data_access\Postgre.fs" />
-      <Compile Include="services\culture\data_access\Storage.fs" />
-      <Compile Include="services\culture\dependencies\Dependencies.fs" />
-      <Compile Include="services\culture\open_ai\Domain.fs" />
-      <Compile Include="services\culture\open_ai\OpenAI.fs" />
-      <Compile Include="services\culture\Culture.fs" />
-    </ItemGroup>
-    <ItemGroup>
-      <ProjectReference Include="..\..\fsharp-infrastructure\src\fsharp-infrastructure.fsproj" />
-      <ProjectReference Include="..\..\fsharp-persistence\src\fsharp-persistence.fsproj" />
-      <ProjectReference Include="..\..\fsharp-web\src\fsharp-web.fsproj" />
-    </ItemGroup>
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="clients\open_ai\Domain.fs" />
+    <Compile Include="clients\open_ai\DataAccess.fs" />
+    <Compile Include="clients\open_ai\Client.fs" />
+    <Compile Include="Client.fs" />
+    <Compile Include="features\culture\domain\Domain.fs" />
+    <Compile Include="features\culture\data_access\Culture.fs" />
+    <Compile Include="features\culture\data_access\FileSystem.fs" />
+    <Compile Include="features\culture\data_access\Postgre.fs" />
+    <Compile Include="features\culture\data_access\Storage.fs" />
+    <Compile Include="features\culture\dependencies\Dependencies.fs" />
+    <Compile Include="features\culture\providers\openai\Domain.fs" />
+    <Compile Include="features\culture\providers\openai\API.fs" />
+    <Compile Include="features\culture\Culture.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\fsharp-infrastructure\src\fsharp-infrastructure.fsproj" />
+    <ProjectReference Include="..\..\fsharp-persistence\src\fsharp-persistence.fsproj" />
+    <ProjectReference Include="..\..\fsharp-web\src\fsharp-web.fsproj" />
+  </ItemGroup>
 </Project>

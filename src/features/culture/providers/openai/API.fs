@@ -1,11 +1,11 @@
-module AIProvider.Services.OpenAI.Culture
+module AIProvider.Features.Providers.OpenAI.Culture
 
 open Infrastructure.SerDe
 open Infrastructure.Prelude
 open AIProvider.Clients.OpenAI
-open AIProvider.Services.Domain
-open AIProvider.Services.DataAccess
-open AIProvider.Services.Domain.OpenAI
+open AIProvider.Features.Domain
+open AIProvider.Features.DataAccess
+open AIProvider.Features.Providers.Domain.OpenAI
 
 let setContext ct =
     fun (client, storage) ->

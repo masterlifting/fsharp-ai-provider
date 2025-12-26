@@ -1,4 +1,4 @@
-module AIProvider.Services.DataAccess.Postgre.Culture
+module AIProvider.Features.DataAccess.Postgre.Culture
 
 open System
 open Infrastructure.Domain
@@ -7,8 +7,8 @@ open Infrastructure.SerDe
 open Persistence.Storages
 open Persistence.Storages.Postgre
 open Persistence.Storages.Domain.Postgre
-open AIProvider.Services.Domain
-open AIProvider.Services.DataAccess
+open AIProvider.Features.Domain
+open AIProvider.Features.DataAccess
 
 type private PostgreResponse() =
     member val Culture = String.Empty with get, set
