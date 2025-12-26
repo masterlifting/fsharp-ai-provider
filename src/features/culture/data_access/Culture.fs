@@ -32,7 +32,6 @@ type ResponseEntity(culture: Culture, response: Response) =
 let inline private toPattern (left, right) = $"%c{left}([^%c{right}]*)'"
 let inline private toValue index = $"[%d{index}]"
 
-//TODO: Add support Result type
 let inline internal serialize shield text =
     Regex.Matches(text, shield |> toPattern)
     |> List.ofSeq
@@ -40,7 +39,6 @@ let inline internal serialize shield text =
     |> List.fold (fun (key: string, values) (i, value) -> key.Replace(value, i |> toValue), value :: values) (text, [])
     |> fun (key, values) -> key, values |> List.rev
 
-//TODO: Add support Result type
 let inline internal deserialize values result =
     result
     |> Option.map (fun result ->
